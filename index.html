@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24 tapaa käyttää tekoälyä työssä</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            color: #fff;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            color: #fff;
+            opacity: 0.95;
+            margin-bottom: 10px;
+        }
+        
+        .credits {
+            font-size: 0.9em;
+            color: #fff;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .door {
+            width: 100%;
+            min-height: 120px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .door::before {
+            content: '🤖';
+            position: absolute;
+            font-size: 3em;
+            opacity: 0.1;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(-10px) rotate(0deg); }
+            50% { transform: translateY(10px) rotate(10deg); }
+        }
+        
+        .door:hover:not(.locked) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(255, 255, 255, 0.3);
+        }
+        
+        .door.locked {
+            background: linear-gradient(135deg, #868f96 0%, #596164 100%);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .door.opened {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            font-size: 2em;
+            color: #fff;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .modal-body {
+            font-size: 1.05em;
+            line-height: 1.8;
+            color: #fff;
+            margin-bottom: 25px;
+        }
+        
+        .modal-body strong {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        
+        .language-divider {
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
+            margin: 30px 0;
+            padding-top: 25px;
+        }
+        
+        .language-label {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 1024px) {
+            .calendar-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .calendar-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+            }
+            
+            .door {
+                font-size: 1.8em;
+                min-height: 100px;
+            }
+            
+            .modal-content {
+                padding: 25px;
+            }
+            
+            .modal-body {
+                font-size: 0.95em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .calendar-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .door {
+                font-size: 1.5em;
+                min-height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎄 24 tapaa käyttää tekoälyä työssä 🤖</h1>
+            <p class="subtitle">AI Advent Calendar 2024</p>
+            <p class="credits">Riikka Lindroos-Järvitalo</p>
+        </header>
+        
+        <div class="calendar-grid" id="calendar"></div>
+    </div>
+    
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle"></div>
+            <div class="modal-body" id="modalBody"></div>
+            <button class="close-btn" onclick="closeModal()">Sulje / Close</button>
+        </div>
+    </div>
+    
+    <script>
+        const doorContents = {
+            1: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Vastuullinen AI:n käyttö ja eettiset kysymykset 🎯</strong>
+
+Tekoäly on voimakas työkalu - käytä sitä viisaasti ja vastuullisesti!
+
+<strong>Tärkeimmät periaatteet:</strong>
+
+<strong>1. Tietosuoja ja luottamuksellisuus</strong>
+- Älä syötä arkaluontoisia henkilötietoja, liikesalaisuuksia tai luottamuksellisia asiakirjoja AI-työkaluihin
+- Tarkista organisaatiosi AI-käytäntö ja tietosuojaohjeet
+
+<strong>2. Faktojen tarkistus</strong>
+- AI voi 'hallusinoida' eli keksiä faktoja. Tarkista aina kriittiset tiedot
+- Älä käytä AI:ta ainoana lähteenä tärkeissä päätöksissä
+
+<strong>3. Läpinäkyvyys</strong>
+- Kerro kun sisältö on AI:n tuottamaa, jos se on relevanttia
+- AI on työkalu - sinä olet vastuussa lopputuloksesta
+
+<strong>4. Ihminen päättää</strong>
+- Käytä AI:ta apuna, ei korvaamaan harkintakykyä
+- Erityisen tärkeää ihmisiin vaikuttavissa päätöksissä
+
+<strong>Pro-vinkki:</strong> Kysy itseltäsi aina: 'Olisiko tämän tiedon syöttäminen AI:lle turvallista?' ja 'Voinko allekirjoittaa tämän tuloksen?' Jos epäröit, älä tee sitä. Vastuullinen käyttö suojaa sekä sinua että organisaatiotasi!
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Responsible AI Use and Ethical Considerations 🎯</strong>
+
+AI is a powerful tool - use it wisely and responsibly!
+
+<strong>Key Principles:</strong>
+
+<strong>1. Privacy and Confidentiality</strong>
+- Don't input sensitive personal data, trade secrets, or confidential documents into AI tools
+- Check your organization's AI policy and data protection guidelines
+
+<strong>2. Fact-Checking</strong>
+- AI can 'hallucinate' or make up facts. Always verify critical information
+- Don't use AI as your only source for important decisions
+
+<strong>3. Transparency</strong>
+- Disclose when content is AI-generated, if relevant
+- AI is a tool - you are responsible for the output
+
+<strong>4. Human Decision-Making</strong>
+- Use AI as assistance, not to replace judgment
+- Especially important in decisions affecting people
+
+<strong>Pro tip:</strong> Always ask yourself: 'Is it safe to input this information into AI?' and 'Can I stand behind this result?' If you hesitate, don't do it. Responsible use protects both you and your organization!`,
+
+            2: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Sähköpostin kirjoittaminen ja parantaminen 📧</strong>
+
+Sähköpostit vievät aikaa, mutta AI voi auttaa!
+
+<strong>Vinkki:</strong> Anna AI:lle konteksti ja pyydä apua.
+
+<strong>Esimerkki:</strong>
+'Kirjoita ystävällinen sähköposti kollegalle, jossa pyydän siirtämään huomisen palaverin kahdella tunnilla myöhemmäksi aikataulukonfliktini vuoksi.'
+
+<strong>Tai paranna valmista tekstiä:</strong>
+'Tee tästä sähköpostista selkeämpi ja ammattimaisempi: [liitä tekstisi]'
+
+<strong>Pro-vinkki:</strong> Kerro vastaanottaja, sävy ja tarkoitus - saat paremman tuloksen! Kokeile miten viesti muuttuu kun vaihdat vastaanottajan kollegasta asiakkaaksi tai yhteistyökumppaniksi. Muista aina tarkistaa ja muokata AI:n ehdotus omaksesi.
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Writing and Improving Emails 📧</strong>
+
+Emails take time, but AI can help!
+
+<strong>Tip:</strong> Give AI context and ask for help.
+
+<strong>Example:</strong>
+'Write a friendly email to a colleague asking to reschedule tomorrow's meeting by two hours due to a schedule conflict.'
+
+<strong>Or improve existing text:</strong>
+'Make this email clearer and more professional: [paste your text]'
+
+<strong>Pro tip:</strong> Specify the recipient, tone, and purpose - you'll get better results! Try how the message changes when you switch the recipient from colleague to customer or partner. Always review and edit AI's suggestion to make it your own.`,
+
+            3: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Kokousmuistiot ja action pointit 📝</strong>
+
+Kokouksen jälkeen muistiinpanojen läpikäynti vie aikaa. AI voi auttaa jäsentämään!
+
+<strong>Vinkki:</strong> Syötä muistiinpanosi AI:lle ja pyydä rakennetta.
+
+<strong>Esimerkki:</strong>
+'Tässä ovat kokousmuistiinpanoni. Tee niistä selkeä muistio jossa on: 1) Käsitellyt asiat, 2) Tehdyt päätökset, 3) Action pointit vastuuhenkilöineen: [liitä muistiinpanot]'
+
+<strong>Pro-vinkki:</strong> Jos et jaksa kirjoittaa muistiinpanoja lainkaan, Copilot voi tehdä ne automaattisesti Teams-kokouksista (vaatii lisenssin). Muuten voit pyytää AI:ta myös ehdottamaan deadlineja action pointeille tai muotoilemaan muistion organisaatiosi mallin mukaan!
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Meeting Notes and Action Points 📝</strong>
+
+Going through notes after meetings takes time. AI can help structure them!
+
+<strong>Tip:</strong> Input your notes to AI and ask for structure.
+
+<strong>Example:</strong>
+'Here are my meeting notes. Create a clear summary with: 1) Topics discussed, 2) Decisions made, 3) Action points with owners: [paste notes]'
+
+<strong>Pro tip:</strong> If you don't want to write notes at all, Copilot can create them automatically from Teams meetings (requires license). Otherwise, you can also ask AI to suggest deadlines for action points or format the notes according to your organization's template!`,
+
+            4: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Raportin tai esityksen runko 📊</strong>
+
+Tyhjä sivu pelottaa. AI auttaa alkuun!
+
+<strong>Vinkki:</strong> Kerro aihe ja tarkoitus, pyydä AI:ta tekemään runko.
+
+<strong>Esimerkki:</strong>
+'Tee runko esitykselle jossa esittelen vuoden 2024 projektin tulokset johtoryhmälle. Esityksen kesto 15 minuuttia. Sisällytä: tavoitteet, toteutus, tulokset, haasteet ja suositukset jatkoa varten.'
+
+<strong>Missä kokeilla:</strong> Copilot PowerPointissa voi luoda esityksen suoraan promptista, ChatGPT ja Claude ovat hyviä raporttien runkojen tekemiseen.
+
+<strong>Pro-vinkki:</strong> Kun saat rungon, voit pyytää AI:ta laajentamaan yksittäisiä kohtia: 'Kirjoita kappale osioon 3: Tulokset ja vaikutukset.'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Report or Presentation Outline 📊</strong>
+
+Blank page anxiety? AI helps you start!
+
+<strong>Tip:</strong> Tell the topic and purpose, ask AI to create an outline.
+
+<strong>Example:</strong>
+'Create an outline for a presentation where I'll present 2024 project results to the executive team. Duration 15 minutes. Include: objectives, execution, results, challenges, and recommendations.'
+
+<strong>Where to try:</strong> Copilot in PowerPoint can create presentations directly from prompts, ChatGPT and Claude are great for report outlines.
+
+<strong>Pro tip:</strong> Once you have the outline, you can ask AI to expand individual sections: 'Write a paragraph for section 3: Results and Impact.'`,
+
+            5: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Tekstin tiivistäminen (pitkä → lyhyt) 🎯</strong>
+
+Pitkät dokumentit ja sähköpostit vievät aikaa lukea. AI tiivistää olennaiset!
+
+<strong>Esimerkki:</strong>
+'Tiivistä tämä 5-sivuinen raportti yhteen kappaleeseen, joka sisältää tärkeimmät havainnot ja suositukset: [liitä teksti]'
+
+<strong>Missä kokeilla:</strong> Kaikki AI-työkalut osaavat tiivistää. Claude on erityisen hyvä pitkien tekstien kanssa.
+
+<strong>Pro-vinkki:</strong> Määrittele tiivistelmän pituus ja muoto: 'yksi kappale', '3 bullet pointia', 'yhden virkeen yhteenveto'.
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Text Summarization (long → short) 🎯</strong>
+
+Long documents and emails take time to read. AI extracts the essentials!
+
+<strong>Example:</strong>
+'Summarize this 5-page report into one paragraph containing the key findings and recommendations: [paste text]'
+
+<strong>Where to try:</strong> All AI tools can summarize. Claude is especially good with long texts.
+
+<strong>Pro tip:</strong> Define the summary length and format: 'one paragraph', '3 bullet points', 'one sentence summary'.`,
+
+            6: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Sävyn muuttaminen (formaalimpi/rennompi) 🎭</strong>
+
+Sama viesti, eri yleisölle - sävy tekee eron!
+
+<strong>Esimerkki:</strong>
+'Muuta tämä teksti formaalimmaksi ja sopivaksi asiakasviestintään: [liitä teksti]'
+
+<strong>Tai päinvastoin:</strong>
+'Tee tästä rennompi ja helpommin lähestyttävä versio sisäiseen viestintään: [liitä teksti]'
+
+<strong>Pro-vinkki:</strong> Kokeile erilaisia sävyjä: 'ystävällinen mutta ammattimainen', 'innostava', 'neutraali', 'empaattinen'.
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Changing Tone (formal/casual) 🎭</strong>
+
+Same message, different audience - tone makes the difference!
+
+<strong>Example:</strong>
+'Make this text more formal and suitable for client communication: [paste text]'
+
+<strong>Or vice versa:</strong>
+'Make this more casual and approachable for internal communication: [paste text]'
+
+<strong>Pro tip:</strong> Try different tones: 'friendly but professional', 'enthusiastic', 'neutral', 'empathetic'.`,
+
+            7: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Kielten kääntäminen ja suomen kielen parantaminen 🇫🇮</strong>
+
+Itsenäisyyspäivänä juhlitaan myös suomen kieltä - ja AI osaa sitä yllättävän hyvin!
+
+<strong>Esimerkki:</strong>
+'Käännä tämä englanninkielinen dokumentti suomeksi niin, että sävy pysyy ammattimaisena: [liitä teksti]'
+
+<strong>Tai:</strong>
+'Tarkista tämä suomenkielinen teksti ja korjaa kielioppivirheet sekä paranna sujuvuutta: [liitä teksti]'
+
+<strong>Pro-vinkki:</strong> Suomi on pieni kieli, mutta modernit AI:t osaavat sitä yllättävän hyvin!
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Language Translation and Finnish Language Improvement 🇫🇮</strong>
+
+On Independence Day we also celebrate Finnish - and AI knows it surprisingly well!
+
+<strong>Example:</strong>
+'Translate this English document to Finnish maintaining a professional tone: [paste text]'
+
+<strong>Or:</strong>
+'Check this Finnish text and correct grammar errors and improve fluency: [paste text]'
+
+<strong>Pro tip:</strong> Finnish is a small language, but modern AIs handle it surprisingly well!`,
+
+            8: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Vastaus vaikeaan sähköpostiin 😰→😊</strong>
+
+Joskus sähköpostin vastaanottaminen tuntuu vaikealta. AI auttaa löytämään oikeat sanat!
+
+<strong>Esimerkki:</strong>
+'Sain sähköpostin jossa asiakas on tyytymätön viivästyneeseen toimitukseen. Auta minua kirjoittamaan empaattinen vastaus jossa: 1) Osoitan ymmärrystä, 2) Selitän tilanteen, 3) Tarjoan ratkaisun.'
+
+<strong>Pro-vinkki:</strong> Älä lähetä AI:n vastausta sellaisenaan - käytä sitä pohjana ja lisää oma äänesi.
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Responding to Difficult Emails 😰→😊</strong>
+
+Sometimes responding to an email feels hard. AI helps find the right words!
+
+<strong>Example:</strong>
+'I received an email where a customer is unhappy about a delayed delivery. Help me write an empathetic response that: 1) Shows understanding, 2) Explains the situation, 3) Offers a solution.'
+
+<strong>Pro tip:</strong> Don't send AI's response as-is - use it as a foundation and add your own voice.`,
+
+            9: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Pitkän dokumentin yhteenveto 📄</strong>
+
+Sadan sivun raportti odottaa lukemista? AI lukee puolestasi!
+
+<strong>Esimerkki:</strong>
+'Lue tämä asiakirja ja kerro: 1) Mikä on päätarkoitus, 2) Mitkä ovat tärkeimmät johtopäätökset, 3) Mitä toimenpiteitä suositellaan'
+
+<strong>Missä kokeilla:</strong> Claude on paras pitkien dokumenttien kanssa. ChatGPT Plus osaa lukea PDF:iä.
+
+<strong>Pro-vinkki:</strong> Voit kysyä tarkentavia kysymyksiä dokumentista: 'Mitä raportissa sanotaan budjetista?'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Long Document Summary 📄</strong>
+
+100-page report waiting to be read? AI reads it for you!
+
+<strong>Example:</strong>
+'Read this document and tell me: 1) What is the main purpose, 2) What are the key conclusions, 3) What actions are recommended'
+
+<strong>Where to try:</strong> Claude is best for long documents. ChatGPT Plus can read PDFs.
+
+<strong>Pro tip:</strong> You can ask follow-up questions about the document: 'What does the report say about the budget?'`,
+
+            10: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Ideointi ja aivoriihi 💡</strong>
+
+Jumissa ideoiden kanssa? AI on loistava sparrauskumppani!
+
+<strong>Esimerkki:</strong>
+'Organisoin työpaikan pikkujoulut 30 hengelle. Tarvitsen ideoita aktiviteetteihin jotka ovat hauskoja, edistävät tiimityötä ja sopivat eri-ikäisille. Budjetti 800€.'
+
+<strong>Pro-vinkki:</strong> Pyydä AI:ta ajattelemaan eri ammattien näkökulmista: 'Anna pikkujouluideoita IT-asiantuntijoille' tai 'Mitä sairaanhoitajat arvostaisivat?'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Ideation and Brainstorming 💡</strong>
+
+Stuck with ideas? AI is a great sparring partner!
+
+<strong>Example:</strong>
+'I'm organizing office holiday party for 30 people. I need ideas for activities that are fun, promote teamwork and suit different ages. Budget €800.'
+
+<strong>Pro tip:</strong> Ask AI to think from different professions' perspectives: 'Give holiday party ideas for IT professionals' or 'What would nurses appreciate?'`,
+
+            11: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Ongelman pilkkominen osiin 🧩</strong>
+
+Iso ongelma tuntuu ylivoimaiselta? AI auttaa jakamaan sen hallittaviksi paloiksi!
+
+<strong>Esimerkki:</strong>
+'Meillä on ongelma: asiakaspalautteen käsittely vie liikaa aikaa ja palautteet hukkuvat. Jaa tämä ongelma pienempiin osiin ja ehdota mitä pitäisi tutkia ensin.'
+
+<strong>Pro-vinkki:</strong> Pyydä AI:ta priorisoimaan osat: 'Mitkä näistä osa-ongelmista kannattaa ratkaista ensin?'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Breaking Down Problems 🧩</strong>
+
+Big problem feels overwhelming? AI helps break it into manageable pieces!
+
+<strong>Example:</strong>
+'We have a problem: customer feedback processing takes too much time and feedback gets lost. Break this problem into smaller parts and suggest what should be investigated first.'
+
+<strong>Pro tip:</strong> Ask AI to prioritize parts: 'Which of these sub-problems should be solved first?'`,
+
+            12: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Päätöksenteon tuki (pros & cons) ⚖️</strong>
+
+Vaikea päätös edessä? AI auttaa punnitsemaan vaihtoehtoja!
+
+<strong>Esimerkki:</strong>
+'Harkitsen kahta vaihtoehtoa uuden projektinhallintatyökalun valinnassa: Vaihtoehto A maksaa vähemmän mutta vaatii enemmän koulutusta. Vaihtoehto B on kalliimpi mutta helppokäyttöisempi. Listaa molempien plussat ja miinukset.'
+
+<strong>Pro-vinkki:</strong> Kysy: 'Mitä kysymyksiä minun pitäisi vielä selvittää ennen päätöstä?'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Decision Support (pros & cons) ⚖️</strong>
+
+Tough decision ahead? AI helps weigh options!
+
+<strong>Example:</strong>
+'I'm considering two options for a new project management tool: Option A costs less but requires more training. Option B is more expensive but easier to use. List the pros and cons of both.'
+
+<strong>Pro tip:</strong> Ask: 'What questions should I still clarify before making a decision?'`,
+
+            13: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Datan tulkinta ja ymmärtäminen 📊</strong>
+
+Numeroita ja taulukoita edessä? AI auttaa ymmärtämään mitä ne kertovat!
+
+<strong>Esimerkki:</strong>
+'Tässä on vuoden myyntiluvut kuukausittain: [liitä data]. Kerro mitä trendejä näet, mitkä kuukaudet olivat parhaita/huonoimpia ja mitä tämä voisi kertoa.'
+
+<strong>Missä kokeilla:</strong> ChatGPT Plus ja Claude voivat analysoida Excel-taulukoita. Copilot Excelissä osaa analysoida suoraan.
+
+<strong>Pro-vinkki:</strong> Pyydä AI:ta visualisoimaan tulokset: 'Ehdota minkälainen kaavio olisi paras tälle datalle.'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Data Interpretation and Understanding 📊</strong>
+
+Numbers and tables ahead? AI helps understand what they tell!
+
+<strong>Example:</strong>
+'Here are annual sales figures by month: [paste data]. Tell me what trends you see, which months were best/worst and what this might indicate.'
+
+<strong>Where to try:</strong> ChatGPT Plus and Claude can analyze Excel tables. Copilot in Excel analyzes directly.
+
+<strong>Pro tip:</strong> Ask AI to visualize results: 'Suggest what kind of chart would be best for this data.'`,
+
+            14: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Eri näkökulmien hahmottaminen 👁️</strong>
+
+Yksi näkökulma on vain yksi totuus - AI auttaa näkemään laajemmin!
+
+<strong>Esimerkki:</strong>
+'Suunnittelemme uutta asiakaspalvelun chatbottia. Analysoi tämä ehdotus neljästä näkökulmasta: loppuasiakkaat, asiakaspalvelutiimi, IT-osasto ja johto.'
+
+<strong>Pro-vinkki:</strong> Pyydä AI:ta haastamaan oletuksia: 'Mikä voisi mennä pieleen tässä suunnitelmassa?'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Understanding Different Perspectives 👁️</strong>
+
+One perspective is just one truth - AI helps see broader!
+
+<strong>Example:</strong>
+'We're planning a new customer service chatbot. Analyze this proposal from four perspectives: end customers, customer service team, IT department, and management.'
+
+<strong>Pro tip:</strong> Ask AI to challenge assumptions: 'What could go wrong with this plan?'`,
+
+            15: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Uuden aiheen oppiminen nopeasti 🚀</strong>
+
+Uusi aihe hallittavaksi nopeasti? AI on henkilökohtainen oppimisassistenttisi!
+
+<strong>Esimerkki:</strong>
+'Haluan oppia projektinhallinnan perusteet. Olen täysi aloittelija. Opeta minulle tärkeimmät konseptit ja työkalut niin että ymmärrän ne käytännössä.'
+
+<strong>Pro-vinkki:</strong> Pyydä AI:ta räätälöimään oppiminen taustallesi: 'Selitä tämä IT-taustan omaavalle henkilölle.'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Learning New Topics Quickly 🚀</strong>
+
+New topic to master quickly? AI is your personal learning assistant!
+
+<strong>Example:</strong>
+'I want to learn project management basics. I'm a complete beginner. Teach me the most important concepts and tools so I understand them practically.'
+
+<strong>Pro tip:</strong> Ask AI to tailor learning to your background: 'Explain this to someone with an IT background.'`,
+
+            16: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Käsitteiden selittäminen (ELI5) 🧒</strong>
+
+'Explain Like I'm 5' - monimutkainen yksinkertaiseksi!
+
+<strong>Esimerkki:</strong>
+'Selitä mitä on lohkoketjuteknologia (blockchain) niin että täysin ei-tekninen henkilö ymmärtää.'
+
+<strong>Pro-vinkki:</strong> Pyydä analogioita: 'Selitä tämä käyttäen arkielämän esimerkkejä.'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Explaining Concepts (ELI5) 🧒</strong>
+
+'Explain Like I'm 5' - complex made simple!
+
+<strong>Example:</strong>
+'Explain what blockchain technology is so that a completely non-technical person understands.'
+
+<strong>Pro tip:</strong> Ask for analogies: 'Explain this using everyday examples.'`,
+
+            17: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Taustatutkimus ja faktojen tarkistus 🔍</strong>
+
+AI tietää paljon - mutta varo, se voi myös erehtyä!
+
+<strong>Esimerkki:</strong>
+'Anna yleiskatsaus EU:n tekoälyasetukseen (AI Act): mitkä ovat keskeiset vaatimukset, aikataulu ja keneen se vaikuttaa?'
+
+<strong>Pro-vinkki:</strong> TÄRKEÄÄ: Älä luota sokeasti! Tarkista aina kriittiset tiedot alkuperäisistä lähteistä!
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Background Research and Fact-Checking 🔍</strong>
+
+AI knows a lot - but beware, it can also be wrong!
+
+<strong>Example:</strong>
+'Give an overview of the EU AI Act: what are the key requirements, timeline, and who does it affect?'
+
+<strong>Pro tip:</strong> IMPORTANT: Don't trust blindly! Always verify critical information from original sources!`,
+
+            18: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Kielten kääntäminen - syvemmin 🌍</strong>
+
+Kääntäminen ei ole vain sanasta sanaan - kulttuurikin on mukana!
+
+<strong>Esimerkki:</strong>
+'Käännä tämä markkinointiviesti englanniksi, mutta mukauta se brittiyleisölle sopivaksi.'
+
+<strong>Pro-vinkki:</strong> Pyydä useita vaihtoehtoja: 'Anna kolme erilaista tapaa kääntää tämä lause.'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Language Translation - Deeper 🌍</strong>
+
+Translation isn't just word-for-word - culture matters too!
+
+<strong>Example:</strong>
+'Translate this marketing message to English, but adapt it for a British audience.'
+
+<strong>Pro tip:</strong> Ask for multiple options: 'Give three different ways to translate this sentence.'`,
+
+            19: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Henkilökohtainen oppimissuunnitelma 📚</strong>
+
+Haluatko kehittyä jossain? AI auttaa laatimaan realistisen suunnitelman!
+
+<strong>Esimerkki:</strong>
+'Haluan oppia data-analyysin perusteet seuraavan 3 kuukauden aikana. Minulla on 2-3 tuntia viikossa aikaa. Luo vaiheittainen oppimissuunnitelma.'
+
+<strong>Pro-vinkki:</strong> Pyydä mitattavia välitavoitteita: 'Miten tiedän että olen valmis siirtymään seuraavaan vaiheeseen?'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Personal Learning Plan 📚</strong>
+
+Want to develop a skill? AI helps create a realistic plan!
+
+<strong>Example:</strong>
+'I want to learn data analysis basics over the next 3 months. I have 2-3 hours per week. Create a step-by-step learning plan.'
+
+<strong>Pro tip:</strong> Ask for measurable milestones: 'How do I know when I'm ready to move to the next step?'`,
+
+            20: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Taulukoiden ja listojen luominen 📋</strong>
+
+Tiedot sekaisin? AI järjestää ne siistiksi taulukoksi tai listaksi!
+
+<strong>Esimerkki:</strong>
+'Tee tästä tiedosta selkeä taulukko: Projekti A alkaa tammikuussa, budjetti 50k, vastuussa Matti. Projekti B alkaa helmikuussa, budjetti 30k, vastuussa Liisa.'
+
+<strong>Pro-vinkki:</strong> Pyydä myös laskentakaavoja: 'Lisää sarake joka laskee jäljellä olevan budjetin.'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Creating Tables and Lists 📋</strong>
+
+Information messy? AI organizes it into neat tables or lists!
+
+<strong>Example:</strong>
+'Create a clear table from this data: Project A starts in January, budget 50k, owner Matti. Project B starts in February, budget 30k, owner Liisa.'
+
+<strong>Pro tip:</strong> Also ask for formulas: 'Add a column that calculates remaining budget.'`,
+
+            21: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Aikataulutus ja priorisointi ⏰</strong>
+
+Liikaa tekemistä, liian vähän aikaa? AI auttaa järjestämään!
+
+<strong>Esimerkki:</strong>
+'Minulla on nämä tehtävät seuraavalle viikolle: [listaa]. Auta priorisoimaan ne kiireellisyyden ja tärkeyden mukaan. Käytä Eisenhower-matriisia.'
+
+<strong>Pro-vinkki:</strong> Pyydä aikaa-arvioita: 'Arvioi kuinka kauan kukin tehtävä vie.'
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Scheduling and Prioritization ⏰</strong>
+
+Too much to do, too little time? AI helps organize!
+
+<strong>Example:</strong>
+'I have these tasks for next week: [list]. Help prioritize them by urgency and importance. Use Eisenhower matrix.'
+
+<strong>Pro tip:</strong> Ask for time estimates: 'Estimate how long each task will take.'`,
+
+            22: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Mallipohjien luominen 📝</strong>
+
+Toistuvat dokumentit vievät aikaa? Luo mallipohja kerran, käytä uudestaan!
+
+<strong>Esimerkki:</strong>
+'Luo mallipohja projektin aloituspalaveriin. Sisällytä: Osallistujien esittely, Projektin tavoitteet, Roolit ja vastuut, Aikataulu, Seuraavat askeleet.'
+
+<strong>Pro-vinkki:</strong> Luo kokoelma malleja yleisimpiin tilanteisiisi.
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Creating Templates 📝</strong>
+
+Repetitive documents take time? Create a template once, use repeatedly!
+
+<strong>Example:</strong>
+'Create a template for project kickoff meeting. Include: Participant introductions, Project objectives, Roles and responsibilities, Timeline, Next steps.'
+
+<strong>Pro tip:</strong> Build a collection of templates for your most common situations.`,
+
+            23: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Toistuvien tehtävien automatisointi 🤖</strong>
+
+Sama tehtävä yhä uudestaan? AI auttaa löytämään tapoja automatisoida!
+
+<strong>Esimerkki:</strong>
+'Joka viikko kokoan viikkoraportin jossa on: edistyneet tehtävät, tulevat deadlinet ja blokkaajaongelmat. Miten voisin automatisoida tätä?'
+
+<strong>Pro-vinkki:</strong> Aloita pienestä - jo 30 min viikkosäästö on 26 tuntia vuodessa!
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Automating Repetitive Tasks 🤖</strong>
+
+Same task over and over? AI helps find ways to automate!
+
+<strong>Example:</strong>
+'Every week I compile a status report with: completed tasks, upcoming deadlines, and blocking issues. How could I automate this?'
+
+<strong>Pro tip:</strong> Start small - even 30 min weekly savings is 26 hours per year!`,
+
+            24: `<div class="language-label">🇫🇮 SUOMI</div>
+<strong>Yhteenveto - Parhaat käytännöt ja seuraavat askeleet 🎄</strong>
+
+Jouluaatto on täällä! Olet oppinut 23 tapaa käyttää tekoälyä työssä - mitä seuraavaksi?
+
+<strong>Tärkeimmät opit:</strong>
+🎯 AI on työkalu, ei ratkaisu - sinä olet edelleen ajattelija
+🔄 Iteroi ja kokeile - ensimmäinen tulos ei ole aina paras
+🎓 Opi jatkuvasti - AI kehittyy nopeasti
+🤝 Jaa oppejasi - auta kollegoitasi
+
+<strong>Seuraavat askeleet:</strong>
+1. Valitse 2-3 vinkkiä joita aiot käyttää ensi viikolla
+2. Varaa 15 min päivässä AI:n kokeiluun
+3. Liity AI-yhteisöihin
+
+Paras tapa oppia AI:n käyttöä on käyttää sitä! Hyvää joulua! 🎄🤖
+
+<div class="language-divider"></div>
+<div class="language-label">🇬🇧 ENGLISH</div>
+<strong>Summary - Best Practices and Next Steps 🎄</strong>
+
+Christmas Eve is here! You've learned 23 ways to use AI at work - what's next?
+
+<strong>Key takeaways:</strong>
+🎯 AI is a tool, not a solution - you're still the thinker
+🔄 Iterate and experiment - first result isn't always best
+🎓 Keep learning - AI develops rapidly
+🤝 Share your learnings - help your colleagues
+
+<strong>Next steps:</strong>
+1. Choose 2-3 tips you'll use next week
+2. Reserve 15 min daily for AI experimentation
+3. Join AI communities
+
+The best way to learn AI is to use it! Merry Christmas! 🎄🤖`
+        };
+        
+        let openedDoors = {};
+        
+        function loadOpenedDoors() {
+            const saved = localStorage.getItem('openedDoors_ai');
+            if (saved) {
+                try {
+                    openedDoors = JSON.parse(saved);
+                } catch (e) {
+                    openedDoors = {};
+                }
+            }
+        }
+        
+        function saveOpenedDoors() {
+            localStorage.setItem('openedDoors_ai', JSON.stringify(openedDoors));
+        }
+        
+        function createCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+            
+            const currentDate = new Date();
+            const currentDay = currentDate.getDate();
+            const currentMonth = currentDate.getMonth() + 1;
+            
+            for (let i = 1; i <= 24; i++) {
+                const door = document.createElement('div');
+                door.className = 'door';
+                door.textContent = i;
+                
+                const isOpened = openedDoors[i] === true;
+                const canOpen = (currentMonth === 12 && i <= currentDay) || currentMonth > 12 || isOpened;
+                
+                if (!canOpen) {
+                    door.classList.add('locked');
+                    door.onclick = function() { showLockedMessage(i); };
+                } else {
+                    if (isOpened) {
+                        door.classList.add('opened');
+                    }
+                    door.onclick = function() { openDoor(i); };
+                }
+                
+                calendar.appendChild(door);
+            }
+        }
+        
+        function showLockedMessage(day) {
+            document.getElementById('modalTitle').textContent = 'Luukku ' + day + ' 🔒 / Door ' + day + ' 🔒';
+            document.getElementById('modalBody').innerHTML = '<div class="language-label">🇫🇮 SUOMI</div>Tämä luukku avautuu vasta ' + day + '. joulukuuta!<div class="language-divider"></div><div class="language-label">🇬🇧 ENGLISH</div>This door opens on December ' + day + '!';
+            document.getElementById('modal').classList.add('active');
+        }
+        
+        function openDoor(day) {
+            const content = doorContents[day];
+            document.getElementById('modalTitle').textContent = 'Luukku / Door ' + day;
+            document.getElementById('modalBody').innerHTML = content;
+            document.getElementById('modal').classList.add('active');
+            
+            openedDoors[day] = true;
+            saveOpenedDoors();
+            
+            const doorElements = document.querySelectorAll('.door');
+            if (doorElements[day - 1]) {
+                doorElements[day - 1].classList.add('opened');
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+        
+        document.getElementById('modal').onclick = function(e) {
+            if (e.target.id === 'modal') {
+                closeModal();
+            }
+        };
+        
+        window.onload = function() {
+            loadOpenedDoors();
+            createCalendar();
+        };
+    </script>
+</body>
+</html>
