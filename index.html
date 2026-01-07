@@ -427,8 +427,8 @@
             ongelmanratkaisu: [10, 11, 12, 14],
             data: [13],
             oppiminen: [15, 16, 17, 19],
-            tuottavuus: [21, 23],
-            perusteet: [1, 24]
+            tuottavuus: [21],
+            perusteet: [1, 23, 24, 25]
         };
         
         const tipsData = {
@@ -1008,66 +1008,188 @@ Repetitive documents take time? Create a template once, use repeatedly!
             },
             23: {
                 fi: {
-                    title: "Toistuvien tehtävien automatisointi 🤖",
-                    preview: "Sama tehtävä yhä uudestaan? AI auttaa löytämään tapoja automatisoida! Aloita pienestä ja säästä aikaa.",
-                    content: `<strong>Toistuvien tehtävien automatisointi 🤖</strong>
+                    title: "Promptien parantaminen ja iteroiminen 🔄",
+                    preview: "Ensimmäinen prompti harvoin on paras. Opi parantamaan kysymyksiäsi ja saat parempia vastauksia!",
+                    content: `<strong>Promptien parantaminen ja iteroiminen 🔄</strong>
 
-Sama tehtävä yhä uudestaan? AI auttaa löytämään tapoja automatisoida!
+Ensimmäinen prompti harvoin on paras. Opi parantamaan kysymyksiäsi!
 
-<strong>Esimerkki:</strong>
-'Joka viikko kokoan viikkoraportin jossa on: edistyneet tehtävät, tulevat deadlinet ja blokkaajaongelmat. Miten voisin automatisoida tätä?'
+<strong>Perusrakenne hyvälle promptille:</strong>
+1. <strong>Konteksti:</strong> Kerro tilanne ja tausta
+2. <strong>Rooli:</strong> Määrittele minkä näkökulman haluat
+3. <strong>Tehtävä:</strong> Kerro selkeästi mitä haluat
+4. <strong>Muoto:</strong> Määrittele haluttu tulosmuoto
 
-<strong>Pro-vinkki:</strong> Aloita pienestä - jo 30 min viikkosäästö on 26 tuntia vuodessa!`
+<strong>Esimerkki huonosta promptista:</strong>
+'Kirjoita jotain markkinoinnista'
+
+<strong>Esimerkki hyvästä promptista:</strong>
+'Toimin pk-yrityksen markkinointipäällikkönä. Kirjoita LinkedIn-postaus jossa kerron uudesta tuotteestamme (ekologinen pyykinpesuneste). Kohdeyleisö: kuluttajat 25-45v. Sävy: innostava mutta asiallinen. Pituus: 150 sanaa.'
+
+<strong>Pro-vinkki:</strong> Jos tulos ei ole hyvä, älä aloita alusta - pyydä AI:ta parantamaan: 'Tee tästä napakampi' tai 'Lisää konkreettisia esimerkkejä'`
                 },
                 en: {
-                    title: "Automating Repetitive Tasks 🤖",
-                    preview: "Same task over and over? AI helps find ways to automate! Start small and save time.",
-                    content: `<strong>Automating Repetitive Tasks 🤖</strong>
+                    title: "Improving and Iterating Prompts 🔄",
+                    preview: "The first prompt is rarely the best. Learn to improve your questions and get better answers!",
+                    content: `<strong>Improving and Iterating Prompts 🔄</strong>
 
-Same task over and over? AI helps find ways to automate!
+The first prompt is rarely the best. Learn to improve your questions!
 
-<strong>Example:</strong>
-'Every week I compile a status report with: completed tasks, upcoming deadlines, and blocking issues. How could I automate this?'
+<strong>Basic structure for a good prompt:</strong>
+1. <strong>Context:</strong> Describe the situation and background
+2. <strong>Role:</strong> Define the perspective you want
+3. <strong>Task:</strong> Clearly state what you want
+4. <strong>Format:</strong> Specify the desired output format
 
-<strong>Pro tip:</strong> Start small - even 30 min weekly savings is 26 hours per year!`
+<strong>Example of a poor prompt:</strong>
+'Write something about marketing'
+
+<strong>Example of a good prompt:</strong>
+'I work as a marketing manager at an SME. Write a LinkedIn post announcing our new product (ecological laundry detergent). Target audience: consumers 25-45y. Tone: enthusiastic but professional. Length: 150 words.'
+
+<strong>Pro tip:</strong> If the result isn't good, don't start over - ask AI to improve: 'Make this more concise' or 'Add concrete examples'`
                 }
             },
             24: {
                 fi: {
-                    title: "Yhteenveto - Parhaat käytännöt 🎄",
-                    preview: "Olet oppinut 23 tapaa käyttää tekoälyä työssä - mitä seuraavaksi? Tärkeimmät opit ja konkreettiset seuraavat askeleet.",
-                    content: `<strong>Yhteenveto - Parhaat käytännöt 🎄</strong>
+                    title: "Tietoturva ja yksityisyys AI:n kanssa 🔒",
+                    preview: "Pidä huolta tietoturvasta AI:ta käyttäessä. Tärkeät ohjeet arkaluontoisen tiedon käsittelyyn.",
+                    content: `<strong>Tietoturva ja yksityisyys AI:n kanssa 🔒</strong>
 
-Olet oppinut 23 tapaa käyttää tekoälyä työssä - mitä seuraavaksi?
+Pidä huolta tietoturvasta AI:ta käyttäessä!
 
-<strong>Tärkeimmät opit:</strong>
-🎯 AI on työkalu, ei ratkaisu - sinä olet edelleen ajattelija
-🔄 Iteroi ja kokeile - ensimmäinen tulos ei ole aina paras
-🎓 Opi jatkuvasti - AI kehittyy nopeasti
-🤝 Jaa oppejasi - auta kollegoitasi
+<strong>ÄLÄ KOSKAAN syötä AI:hin:</strong>
+- Henkilötietoja (nimet, osoitteet, henkilötunnukset)
+- Asiakastietoja tai potilastietoja
+- Salasanoja tai tunnuksia
+- Liikesalaisuuksia tai luottamuksellisia asiakirjoja
+- Julkaisematonta tutkimustietoa
+- Sopimuksia tai juridisia asiakirjoja sellaisenaan
 
-<strong>Seuraavat askeleet:</strong>
-1. Valitse 2-3 vinkkiä joita aiot käyttää ensi viikolla
-2. Varaa 15 min päivässä AI:n kokeiluun
-3. Liity AI-yhteisöihin`
+<strong>Turvallinen tapa käyttää AI:ta arkaluontoisen datan kanssa:</strong>
+1. Anonymisoi tiedot: 'Yritys A' sijaan 'Asiakas', 'Henkilö X' sijaan 'Työntekijä'
+2. Käytä esimerkkejä: Oikean datan sijaan luo vastaava esimerkkidata
+3. Kysy yleisellä tasolla: 'Miten käsitellään GDPR-rikkomus?' sen sijaan että kuvaisisit todellisen tapauksen
+
+<strong>Organisaation käytännöt:</strong>
+- Tarkista aina organisaatiosi AI-käyttöpolitiikka
+- Kysy esimieheltä jos epävarma
+- Käytä organisaation hyväksymiä työkaluja
+
+<strong>Muista:</strong> Kun syötät jotain AI:hin, se voi tallentua ja käyttää mallin kouluttamiseen (riippuen työkalusta). Älä syötä mitään, mitä et haluaisi muiden näkevän.`
                 },
                 en: {
-                    title: "Summary - Best Practices 🎄",
-                    preview: "You've learned 23 ways to use AI at work - what's next? Key takeaways and concrete next steps.",
-                    content: `<strong>Summary - Best Practices 🎄</strong>
+                    title: "Security and Privacy with AI 🔒",
+                    preview: "Take care of security when using AI. Important guidelines for handling sensitive information.",
+                    content: `<strong>Security and Privacy with AI 🔒</strong>
 
-You've learned 23 ways to use AI at work - what's next?
+Take care of security when using AI!
 
-<strong>Key takeaways:</strong>
-🎯 AI is a tool, not a solution - you're still the thinker
-🔄 Iterate and experiment - first result isn't always best
-🎓 Keep learning - AI develops rapidly
-🤝 Share your learnings - help your colleagues
+<strong>NEVER input into AI:</strong>
+- Personal data (names, addresses, social security numbers)
+- Customer or patient data
+- Passwords or credentials
+- Trade secrets or confidential documents
+- Unpublished research data
+- Contracts or legal documents as-is
+
+<strong>Safe way to use AI with sensitive data:</strong>
+1. Anonymize information: Use 'Customer' instead of 'Company A', 'Employee' instead of 'Person X'
+2. Use examples: Create similar example data instead of real data
+3. Ask at general level: 'How to handle GDPR breach?' instead of describing actual case
+
+<strong>Organizational practices:</strong>
+- Always check your organization's AI usage policy
+- Ask your supervisor if unsure
+- Use organization-approved tools
+
+<strong>Remember:</strong> When you input something into AI, it may be stored and used for model training (depending on the tool). Don't input anything you wouldn't want others to see.`
+                }
+            },
+            25: {
+                fi: {
+                    title: "Yhteenveto - Jatkuva oppiminen 🎓",
+                    preview: "AI kehittyy nopeasti - pysy mukana! Vinkkejä miten pysyä ajan tasalla ja kehittää osaamistasi.",
+                    content: `<strong>Yhteenveto - Jatkuva oppiminen 🎓</strong>
+
+AI kehittyy nopeasti - pysy mukana!
+
+<strong>Parhaat tavat oppia lisää:</strong>
+
+<strong>1. Päivittäinen harjoittelu</strong>
+- Käytä AI:ta vähintään yhdessä tehtävässä päivittäin
+- Kokeile joka viikko yhtä uutta käyttötapaa
+- Pidä 'AI-päiväkirjaa': mikä toimi, mikä ei
+
+<strong>2. Seuraa kehitystä</strong>
+- LinkedIn: seuraa AI-asiantuntijoita
+- Uutiskirjeet: esim. AI Breakfast, The Rundown AI
+- Podcastit: AI-aiheisia podcast-sarjoja
+- YouTube: tutoriaaleja ja vinkkejä
+
+<strong>3. Yhteisöt</strong>
+- Liity organisaatiosi AI-käyttäjäryhmään
+- Osallistu keskusteluihin ja jaa oppejasi
+- Kysy rohkeasti - kaikki oppivat vielä!
+
+<strong>4. Kokeile uusia työkaluja</strong>
+- Testaa eri AI-työkaluja (ChatGPT, Claude, Copilot)
+- Kokeile erikoistuneita työkaluja (esim. kuvagenerointiin)
+- Seuraa uusien työkalujen julkaisuja
+
+<strong>Muista:</strong>
+✨ Virheistä oppii - älä pelkää kokeilla
+🎯 Fokusoi omaan työnkuvaasi - mitkä vinkit auttavat sinua eniten?
+🤝 Jaa oppejasi - opetaminen on parasta oppimista
+🔄 AI kehittyy nopeasti - mikä ei toimi tänään, voi toimia huomenna
+
+<strong>Seuraavat askeleet:</strong>
+1. Valitse 2-3 vinkkiä tästä vinkkipankista
+2. Käytä niitä seuraavan viikon aikana
+3. Arvioi mikä toimi ja mikä ei
+4. Jaa kokemuksesi kollegoiden kanssa!`
+                },
+                en: {
+                    title: "Summary - Continuous Learning 🎓",
+                    preview: "AI develops rapidly - stay updated! Tips on how to stay current and develop your skills.",
+                    content: `<strong>Summary - Continuous Learning 🎓</strong>
+
+AI develops rapidly - stay updated!
+
+<strong>Best ways to learn more:</strong>
+
+<strong>1. Daily practice</strong>
+- Use AI in at least one task daily
+- Try one new use case each week
+- Keep an 'AI diary': what worked, what didn't
+
+<strong>2. Follow developments</strong>
+- LinkedIn: follow AI experts
+- Newsletters: e.g., AI Breakfast, The Rundown AI
+- Podcasts: AI-themed podcast series
+- YouTube: tutorials and tips
+
+<strong>3. Communities</strong>
+- Join your organization's AI user group
+- Participate in discussions and share learnings
+- Ask boldly - everyone is still learning!
+
+<strong>4. Try new tools</strong>
+- Test different AI tools (ChatGPT, Claude, Copilot)
+- Try specialized tools (e.g., image generation)
+- Follow new tool releases
+
+<strong>Remember:</strong>
+✨ You learn from mistakes - don't be afraid to experiment
+🎯 Focus on your role - which tips help you most?
+🤝 Share your learnings - teaching is the best learning
+🔄 AI develops rapidly - what doesn't work today may work tomorrow
 
 <strong>Next steps:</strong>
-1. Choose 2-3 tips you'll use next week
-2. Reserve 15 min daily for AI experimentation
-3. Join AI communities`
+1. Choose 2-3 tips from this tips bank
+2. Use them during the next week
+3. Evaluate what worked and what didn't
+4. Share your experiences with colleagues!`
                 }
             }
         };
@@ -1182,7 +1304,6 @@ You've learned 23 ways to use AI at work - what's next?
             const card = document.createElement('div');
             card.className = 'tip-card';
             card.innerHTML = `
-                <div class="tip-number">${tipNum}</div>
                 <div class="tip-title">${tip.title}</div>
                 <div class="tip-preview">${tip.preview}</div>
             `;
@@ -1192,7 +1313,7 @@ You've learned 23 ways to use AI at work - what's next?
         
         function openTip(tipNum) {
             const tip = tipsData[tipNum][currentLang];
-            document.getElementById('modalTitle').textContent = `${translations[currentLang].tipPrefix} ${tipNum}: ${tip.title}`;
+            document.getElementById('modalTitle').textContent = tip.title;
             document.getElementById('modalBody').innerHTML = tip.content;
             document.getElementById('modal').classList.add('active');
         }
