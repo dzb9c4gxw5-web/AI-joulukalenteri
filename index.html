@@ -25,6 +25,35 @@
             margin: 0 auto;
         }
         
+        .language-switcher {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .lang-btn {
+            padding: 8px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            font-weight: 500;
+        }
+        
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .lang-btn.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            border-color: #fff;
+        }
+        
         header {
             text-align: center;
             margin-bottom: 40px;
@@ -221,20 +250,6 @@
             font-size: 1.1em;
         }
         
-        .language-divider {
-            border-top: 2px solid rgba(255, 255, 255, 0.3);
-            margin: 30px 0;
-            padding-top: 25px;
-        }
-        
-        .language-label {
-            font-size: 0.9em;
-            opacity: 0.7;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
         .close-btn {
             background: rgba(255, 255, 255, 0.2);
             color: #fff;
@@ -304,9 +319,14 @@
 </head>
 <body>
     <div class="container">
+        <div class="language-switcher">
+            <button class="lang-btn active" data-lang="fi">🇫🇮 Suomi</button>
+            <button class="lang-btn" data-lang="en">🇬🇧 English</button>
+        </div>
+        
         <header>
-            <h1>🤖 AI-vinkkipankki</h1>
-            <p class="subtitle">24 käytännön vinkkiä tekoälyn hyödyntämiseen työssä</p>
+            <h1 id="mainTitle">🤖 AI-vinkkipankki</h1>
+            <p class="subtitle" id="subtitle">24 käytännön vinkkiä tekoälyn hyödyntämiseen työssä</p>
             <p style="opacity: 0.8; margin-top: 10px;">Copilot | ChatGPT | Claude</p>
         </header>
         
@@ -318,7 +338,7 @@
                 placeholder="🔍 Hae vinkkejä... (esim. 'sähköposti', 'oppiminen', 'dokumentti')"
             >
             
-            <div class="filter-buttons">
+            <div class="filter-buttons" id="filterButtons">
                 <button class="filter-btn active" data-category="all">Kaikki vinkit</button>
                 <button class="filter-btn" data-category="viestinta">📧 Viestintä</button>
                 <button class="filter-btn" data-category="dokumentit">📝 Dokumentit</button>
@@ -333,13 +353,13 @@
         <div id="tipsContainer"></div>
         
         <div id="noResults" class="no-results hidden">
-            <p>🔍 Ei tuloksia haulle</p>
-            <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.8;">Kokeile eri hakusanoja tai valitse kategoria</p>
+            <p id="noResultsText">🔍 Ei tuloksia haulle</p>
+            <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.8;" id="noResultsHint">Kokeile eri hakusanoja tai valitse kategoria</p>
         </div>
         
         <footer>
-            <p>💡 Muista: AI on työkalu - sinä olet ajattelija</p>
-            <p style="font-size: 0.9em; opacity: 0.8;">Alkuperäinen AI Advent Calendar 2024 | Nyt vinkkipankkina</p>
+            <p id="footerReminder">💡 Muista: AI on työkalu - sinä olet ajattelija</p>
+            <p style="font-size: 0.9em; opacity: 0.8;" id="footerCredit">Alkuperäinen AI Advent Calendar 2025 | Nyt vinkkipankkina</p>
         </footer>
     </div>
     
@@ -347,48 +367,76 @@
         <div class="modal-content">
             <div class="modal-header" id="modalTitle"></div>
             <div class="modal-body" id="modalBody"></div>
-            <button class="close-btn" onclick="closeModal()">Sulje / Close</button>
+            <button class="close-btn" id="closeBtn">Sulje</button>
         </div>
     </div>
     
     <script>
-        const categories = {
-            viestinta: {
-                title: "📧 Viestintä ja sähköpostit",
-                tips: [2, 6, 7, 8, 18]
+        let currentLang = 'fi';
+        let currentFilter = 'all';
+        let searchTerm = '';
+        
+        const translations = {
+            fi: {
+                mainTitle: '🤖 AI-vinkkipankki',
+                subtitle: '24 käytännön vinkkiä tekoälyn hyödyntämiseen työssä',
+                searchPlaceholder: '🔍 Hae vinkkejä... (esim. \'sähköposti\', \'oppiminen\', \'dokumentti\')',
+                allTips: 'Kaikki vinkit',
+                noResultsText: '🔍 Ei tuloksia haulle',
+                noResultsHint: 'Kokeile eri hakusanoja tai valitse kategoria',
+                footerReminder: '💡 Muista: AI on työkalu - sinä olet ajattelija',
+                footerCredit: 'Alkuperäinen AI Advent Calendar 2025 | Nyt vinkkipankkina',
+                closeBtn: 'Sulje',
+                tipPrefix: 'Vinkki',
+                categories: {
+                    viestinta: '📧 Viestintä ja sähköpostit',
+                    dokumentit: '📝 Dokumentit ja raportit',
+                    ongelmanratkaisu: '💡 Ongelmanratkaisu ja päätöksenteko',
+                    data: '📊 Data ja analyysi',
+                    oppiminen: '🎓 Oppiminen ja ymmärtäminen',
+                    tuottavuus: '⏰ Tuottavuus ja organisointi',
+                    perusteet: '🎯 Perusteet ja parhaat käytännöt'
+                }
             },
-            dokumentit: {
-                title: "📝 Dokumentit ja raportit",
-                tips: [3, 4, 5, 9, 20, 22]
-            },
-            ongelmanratkaisu: {
-                title: "💡 Ongelmanratkaisu ja päätöksenteko",
-                tips: [10, 11, 12, 14]
-            },
-            data: {
-                title: "📊 Data ja analyysi",
-                tips: [13]
-            },
-            oppiminen: {
-                title: "🎓 Oppiminen ja ymmärtäminen",
-                tips: [15, 16, 17, 19]
-            },
-            tuottavuus: {
-                title: "⏰ Tuottavuus ja organisointi",
-                tips: [21, 23]
-            },
-            perusteet: {
-                title: "🎯 Perusteet ja parhaat käytännöt",
-                tips: [1, 24]
+            en: {
+                mainTitle: '🤖 AI Tips Bank',
+                subtitle: '24 practical tips for using AI at work',
+                searchPlaceholder: '🔍 Search tips... (e.g. \'email\', \'learning\', \'document\')',
+                allTips: 'All tips',
+                noResultsText: '🔍 No results found',
+                noResultsHint: 'Try different keywords or select a category',
+                footerReminder: '💡 Remember: AI is a tool - you are the thinker',
+                footerCredit: 'Original AI Advent Calendar 2025 | Now as a tips bank',
+                closeBtn: 'Close',
+                tipPrefix: 'Tip',
+                categories: {
+                    viestinta: '📧 Communication and Emails',
+                    dokumentit: '📝 Documents and Reports',
+                    ongelmanratkaisu: '💡 Problem Solving and Decision Making',
+                    data: '📊 Data and Analysis',
+                    oppiminen: '🎓 Learning and Understanding',
+                    tuottavuus: '⏰ Productivity and Organization',
+                    perusteet: '🎯 Basics and Best Practices'
+                }
             }
+        };
+        
+        const categoryTips = {
+            viestinta: [2, 6, 7, 8, 18],
+            dokumentit: [3, 4, 5, 9, 20, 22],
+            ongelmanratkaisu: [10, 11, 12, 14],
+            data: [13],
+            oppiminen: [15, 16, 17, 19],
+            tuottavuus: [21, 23],
+            perusteet: [1, 24]
         };
         
         const tipsData = {
             1: {
-                title: "Vastuullinen AI:n käyttö ja eettiset kysymykset 🎯",
-                preview: "Tekoäly on voimakas työkalu - käytä sitä viisaasti ja vastuullisesti! Opi tärkeimmät periaatteet tietosuojasta, faktojen tarkistuksesta ja läpinäkyvyydestä.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Vastuullinen AI:n käyttö ja eettiset kysymykset 🎯</strong>
+                fi: {
+                    title: "Vastuullinen AI:n käyttö ja eettiset kysymykset 🎯",
+                    preview: "Tekoäly on voimakas työkalu - käytä sitä viisaasti ja vastuullisesti! Opi tärkeimmät periaatteet tietosuojasta, faktojen tarkistuksesta ja läpinäkyvyydestä.",
+                    content: `<strong>Vastuullinen AI:n käyttö ja eettiset kysymykset 🎯</strong>
 
 Tekoäly on voimakas työkalu - käytä sitä viisaasti ja vastuullisesti!
 
@@ -410,11 +458,12 @@ Tekoäly on voimakas työkalu - käytä sitä viisaasti ja vastuullisesti!
 - Käytä AI:ta apuna, ei korvaamaan harkintakykyä
 - Erityisen tärkeää ihmisiin vaikuttavissa päätöksissä
 
-<strong>Pro-vinkki:</strong> Kysy itseltäsi aina: 'Olisiko tämän tiedon syöttäminen AI:lle turvallista?' ja 'Voinko allekirjoittaa tämän tuloksen?' Jos epäröit, älä tee sitä. Vastuullinen käyttö suojaa sekä sinua että organisaatiotasi!
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Responsible AI Use and Ethical Considerations 🎯</strong>
+<strong>Pro-vinkki:</strong> Kysy itseltäsi aina: 'Olisiko tämän tiedon syöttäminen AI:lle turvallista?' ja 'Voinko allekirjoittaa tämän tuloksen?' Jos epäröit, älä tee sitä. Vastuullinen käyttö suojaa sekä sinua että organisaatiotasi!`
+                },
+                en: {
+                    title: "Responsible AI Use and Ethical Considerations 🎯",
+                    preview: "AI is a powerful tool - use it wisely and responsibly! Learn the key principles of privacy, fact-checking, and transparency.",
+                    content: `<strong>Responsible AI Use and Ethical Considerations 🎯</strong>
 
 AI is a powerful tool - use it wisely and responsibly!
 
@@ -437,12 +486,13 @@ AI is a powerful tool - use it wisely and responsibly!
 - Especially important in decisions affecting people
 
 <strong>Pro tip:</strong> Always ask yourself: 'Is it safe to input this information into AI?' and 'Can I stand behind this result?' If you hesitate, don't do it. Responsible use protects both you and your organization!`
+                }
             },
             2: {
-                title: "Sähköpostin kirjoittaminen ja parantaminen 📧",
-                preview: "Sähköpostit vievät aikaa, mutta AI voi auttaa! Anna konteksti ja pyydä apua tai paranna valmista tekstiä selkeämmäksi ja ammattimaisemmaksi.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Sähköpostin kirjoittaminen ja parantaminen 📧</strong>
+                fi: {
+                    title: "Sähköpostin kirjoittaminen ja parantaminen 📧",
+                    preview: "Sähköpostit vievät aikaa, mutta AI voi auttaa! Anna konteksti ja pyydä apua tai paranna valmista tekstiä selkeämmäksi ja ammattimaisemmaksi.",
+                    content: `<strong>Sähköpostin kirjoittaminen ja parantaminen 📧</strong>
 
 Sähköpostit vievät aikaa, mutta AI voi auttaa!
 
@@ -454,11 +504,12 @@ Sähköpostit vievät aikaa, mutta AI voi auttaa!
 <strong>Tai paranna valmista tekstiä:</strong>
 'Tee tästä sähköpostista selkeämpi ja ammattimaisempi: [liitä tekstisi]'
 
-<strong>Pro-vinkki:</strong> Kerro vastaanottaja, sävy ja tarkoitus - saat paremman tuloksen! Kokeile miten viesti muuttuu kun vaihdat vastaanottajan kollegasta asiakkaaksi tai yhteistyökumppaniksi. Muista aina tarkistaa ja muokata AI:n ehdotus omaksesi.
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Writing and Improving Emails 📧</strong>
+<strong>Pro-vinkki:</strong> Kerro vastaanottaja, sävy ja tarkoitus - saat paremman tuloksen!`
+                },
+                en: {
+                    title: "Writing and Improving Emails 📧",
+                    preview: "Emails take time, but AI can help! Give context and ask for help or improve existing text to make it clearer and more professional.",
+                    content: `<strong>Writing and Improving Emails 📧</strong>
 
 Emails take time, but AI can help!
 
@@ -470,172 +521,162 @@ Emails take time, but AI can help!
 <strong>Or improve existing text:</strong>
 'Make this email clearer and more professional: [paste your text]'
 
-<strong>Pro tip:</strong> Specify the recipient, tone, and purpose - you'll get better results! Try how the message changes when you switch the recipient from colleague to customer or partner. Always review and edit AI's suggestion to make it your own.`
+<strong>Pro tip:</strong> Specify the recipient, tone, and purpose - you'll get better results!`
+                }
             },
             3: {
-                title: "Kokousmuistiot ja action pointit 📝",
-                preview: "Kokouksen jälkeen muistiinpanojen läpikäynti vie aikaa. AI voi auttaa jäsentämään muistiinpanot selkeäksi muistioksi päätöksineen ja action pointteineen.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Kokousmuistiot ja action pointit 📝</strong>
+                fi: {
+                    title: "Kokousmuistiot ja action pointit 📝",
+                    preview: "Kokouksen jälkeen muistiinpanojen läpikäynti vie aikaa. AI voi auttaa jäsentämään muistiinpanot selkeäksi muistioksi päätöksineen ja action pointteineen.",
+                    content: `<strong>Kokousmuistiot ja action pointit 📝</strong>
 
 Kokouksen jälkeen muistiinpanojen läpikäynti vie aikaa. AI voi auttaa jäsentämään!
 
 <strong>Vinkki:</strong> Syötä muistiinpanosi AI:lle ja pyydä rakennetta.
 
 <strong>Esimerkki:</strong>
-'Tässä ovat kokousmuistiinpanoni. Tee niistä selkeä muistio jossa on: 1) Käsitellyt asiat, 2) Tehdyt päätökset, 3) Action pointit vastuuhenkilöineen: [liitä muistiinpanot]'
+'Tässä ovat kokousmuistiinpanoni. Tee niistä selkeä muistio jossa on: 1) Käsitellyt asiat, 2) Tehdyt päätökset, 3) Action pointit vastuuhenkilöineen'
 
-<strong>Pro-vinkki:</strong> Jos et jaksa kirjoittaa muistiinpanoja lainkaan, Copilot voi tehdä ne automaattisesti Teams-kokouksista (vaatii lisenssin). Muuten voit pyytää AI:ta myös ehdottamaan deadlineja action pointeille tai muotoilemaan muistion organisaatiosi mallin mukaan!
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Meeting Notes and Action Points 📝</strong>
+<strong>Pro-vinkki:</strong> Copilot voi tehdä muistiot automaattisesti Teams-kokouksista!`
+                },
+                en: {
+                    title: "Meeting Notes and Action Points 📝",
+                    preview: "Going through notes after meetings takes time. AI can help structure notes into clear summaries with decisions and action points.",
+                    content: `<strong>Meeting Notes and Action Points 📝</strong>
 
 Going through notes after meetings takes time. AI can help structure them!
 
 <strong>Tip:</strong> Input your notes to AI and ask for structure.
 
 <strong>Example:</strong>
-'Here are my meeting notes. Create a clear summary with: 1) Topics discussed, 2) Decisions made, 3) Action points with owners: [paste notes]'
+'Here are my meeting notes. Create a clear summary with: 1) Topics discussed, 2) Decisions made, 3) Action points with owners'
 
-<strong>Pro tip:</strong> If you don't want to write notes at all, Copilot can create them automatically from Teams meetings (requires license). Otherwise, you can also ask AI to suggest deadlines for action points or format the notes according to your organization's template!`
+<strong>Pro tip:</strong> Copilot can create notes automatically from Teams meetings!`
+                }
             },
             4: {
-                title: "Raportin tai esityksen runko 📊",
-                preview: "Tyhjä sivu pelottaa. AI auttaa alkuun! Kerro aihe ja tarkoitus, pyydä AI:ta tekemään runko esitykselleesi tai raportillesi.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Raportin tai esityksen runko 📊</strong>
+                fi: {
+                    title: "Raportin tai esityksen runko 📊",
+                    preview: "Tyhjä sivu pelottaa. AI auttaa alkuun! Kerro aihe ja tarkoitus, pyydä AI:ta tekemään runko esitykselleesi tai raportillesi.",
+                    content: `<strong>Raportin tai esityksen runko 📊</strong>
 
 Tyhjä sivu pelottaa. AI auttaa alkuun!
 
-<strong>Vinkki:</strong> Kerro aihe ja tarkoitus, pyydä AI:ta tekemään runko.
-
 <strong>Esimerkki:</strong>
-'Tee runko esitykselle jossa esittelen vuoden 2024 projektin tulokset johtoryhmälle. Esityksen kesto 15 minuuttia. Sisällytä: tavoitteet, toteutus, tulokset, haasteet ja suositukset jatkoa varten.'
+'Tee runko esitykselle jossa esittelen vuoden 2024 projektin tulokset johtoryhmälle. Esityksen kesto 15 minuuttia.'
 
-<strong>Missä kokeilla:</strong> Copilot PowerPointissa voi luoda esityksen suoraan promptista, ChatGPT ja Claude ovat hyviä raporttien runkojen tekemiseen.
-
-<strong>Pro-vinkki:</strong> Kun saat rungon, voit pyytää AI:ta laajentamaan yksittäisiä kohtia: 'Kirjoita kappale osioon 3: Tulokset ja vaikutukset.'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Report or Presentation Outline 📊</strong>
+<strong>Pro-vinkki:</strong> Kun saat rungon, voit pyytää AI:ta laajentamaan yksittäisiä kohtia.`
+                },
+                en: {
+                    title: "Report or Presentation Outline 📊",
+                    preview: "Blank page anxiety? AI helps you start! Tell the topic and purpose, ask AI to create an outline for your presentation or report.",
+                    content: `<strong>Report or Presentation Outline 📊</strong>
 
 Blank page anxiety? AI helps you start!
 
-<strong>Tip:</strong> Tell the topic and purpose, ask AI to create an outline.
-
 <strong>Example:</strong>
-'Create an outline for a presentation where I'll present 2024 project results to the executive team. Duration 15 minutes. Include: objectives, execution, results, challenges, and recommendations.'
+'Create an outline for a presentation where I'll present 2024 project results to the executive team. Duration 15 minutes.'
 
-<strong>Where to try:</strong> Copilot in PowerPoint can create presentations directly from prompts, ChatGPT and Claude are great for report outlines.
-
-<strong>Pro tip:</strong> Once you have the outline, you can ask AI to expand individual sections: 'Write a paragraph for section 3: Results and Impact.'`
+<strong>Pro tip:</strong> Once you have the outline, you can ask AI to expand individual sections.`
+                }
             },
             5: {
-                title: "Tekstin tiivistäminen (pitkä → lyhyt) 🎯",
-                preview: "Pitkät dokumentit ja sähköpostit vievät aikaa lukea. AI tiivistää olennaiset! Määrittele vain haluamasi pituus ja muoto.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Tekstin tiivistäminen (pitkä → lyhyt) 🎯</strong>
+                fi: {
+                    title: "Tekstin tiivistäminen (pitkä → lyhyt) 🎯",
+                    preview: "Pitkät dokumentit ja sähköpostit vievät aikaa lukea. AI tiivistää olennaiset! Määrittele vain haluamasi pituus ja muoto.",
+                    content: `<strong>Tekstin tiivistäminen (pitkä → lyhyt) 🎯</strong>
 
 Pitkät dokumentit ja sähköpostit vievät aikaa lukea. AI tiivistää olennaiset!
 
 <strong>Esimerkki:</strong>
-'Tiivistä tämä 5-sivuinen raportti yhteen kappaleeseen, joka sisältää tärkeimmät havainnot ja suositukset: [liitä teksti]'
+'Tiivistä tämä 5-sivuinen raportti yhteen kappaleeseen, joka sisältää tärkeimmät havainnot ja suositukset'
 
-<strong>Missä kokeilla:</strong> Kaikki AI-työkalut osaavat tiivistää. Claude on erityisen hyvä pitkien tekstien kanssa.
-
-<strong>Pro-vinkki:</strong> Määrittele tiivistelmän pituus ja muoto: 'yksi kappale', '3 bullet pointia', 'yhden virkeen yhteenveto'.
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Text Summarization (long → short) 🎯</strong>
+<strong>Pro-vinkki:</strong> Määrittele tiivistelmän pituus ja muoto: 'yksi kappale', '3 bullet pointia', 'yhden virkeen yhteenveto'.`
+                },
+                en: {
+                    title: "Text Summarization (long → short) 🎯",
+                    preview: "Long documents and emails take time to read. AI extracts the essentials! Just define your desired length and format.",
+                    content: `<strong>Text Summarization (long → short) 🎯</strong>
 
 Long documents and emails take time to read. AI extracts the essentials!
 
 <strong>Example:</strong>
-'Summarize this 5-page report into one paragraph containing the key findings and recommendations: [paste text]'
-
-<strong>Where to try:</strong> All AI tools can summarize. Claude is especially good with long texts.
+'Summarize this 5-page report into one paragraph containing the key findings and recommendations'
 
 <strong>Pro tip:</strong> Define the summary length and format: 'one paragraph', '3 bullet points', 'one sentence summary'.`
+                }
             },
             6: {
-                title: "Sävyn muuttaminen (formaalimpi/rennompi) 🎭",
-                preview: "Sama viesti, eri yleisölle - sävy tekee eron! Muuta tekstiä formaalimmaksi asiakasviestintään tai rennommaksi sisäiseen käyttöön.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Sävyn muuttaminen (formaalimpi/rennompi) 🎭</strong>
+                fi: {
+                    title: "Sävyn muuttaminen (formaalimpi/rennompi) 🎭",
+                    preview: "Sama viesti, eri yleisölle - sävy tekee eron! Muuta tekstiä formaalimmaksi asiakasviestintään tai rennommaksi sisäiseen käyttöön.",
+                    content: `<strong>Sävyn muuttaminen (formaalimpi/rennompi) 🎭</strong>
 
 Sama viesti, eri yleisölle - sävy tekee eron!
 
 <strong>Esimerkki:</strong>
-'Muuta tämä teksti formaalimmaksi ja sopivaksi asiakasviestintään: [liitä teksti]'
+'Muuta tämä teksti formaalimmaksi ja sopivaksi asiakasviestintään'
 
-<strong>Tai päinvastoin:</strong>
-'Tee tästä rennompi ja helpommin lähestyttävä versio sisäiseen viestintään: [liitä teksti]'
-
-<strong>Pro-vinkki:</strong> Kokeile erilaisia sävyjä: 'ystävällinen mutta ammattimainen', 'innostava', 'neutraali', 'empaattinen'.
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Changing Tone (formal/casual) 🎭</strong>
+<strong>Pro-vinkki:</strong> Kokeile erilaisia sävyjä: 'ystävällinen mutta ammattimainen', 'innostava', 'neutraali', 'empaattinen'.`
+                },
+                en: {
+                    title: "Changing Tone (formal/casual) 🎭",
+                    preview: "Same message, different audience - tone makes the difference! Make text more formal for client communication or more casual for internal use.",
+                    content: `<strong>Changing Tone (formal/casual) 🎭</strong>
 
 Same message, different audience - tone makes the difference!
 
 <strong>Example:</strong>
-'Make this text more formal and suitable for client communication: [paste text]'
-
-<strong>Or vice versa:</strong>
-'Make this more casual and approachable for internal communication: [paste text]'
+'Make this text more formal and suitable for client communication'
 
 <strong>Pro tip:</strong> Try different tones: 'friendly but professional', 'enthusiastic', 'neutral', 'empathetic'.`
+                }
             },
             7: {
-                title: "Kielten kääntäminen ja suomen kielen parantaminen 🇫🇮",
-                preview: "Modernit AI:t osaavat suomea yllättävän hyvin! Käännä dokumentteja tai tarkista ja paranna suomenkielisiä tekstejä.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Kielten kääntäminen ja suomen kielen parantaminen 🇫🇮</strong>
+                fi: {
+                    title: "Kielten kääntäminen ja suomen kielen parantaminen 🇫🇮",
+                    preview: "Modernit AI:t osaavat suomea yllättävän hyvin! Käännä dokumentteja tai tarkista ja paranna suomenkielisiä tekstejä.",
+                    content: `<strong>Kielten kääntäminen ja suomen kielen parantaminen 🇫🇮</strong>
 
-Itsenäisyyspäivänä juhlitaan myös suomen kieltä - ja AI osaa sitä yllättävän hyvin!
+Modernit AI:t osaavat suomea yllättävän hyvin!
 
 <strong>Esimerkki:</strong>
-'Käännä tämä englanninkielinen dokumentti suomeksi niin, että sävy pysyy ammattimaisena: [liitä teksti]'
+'Käännä tämä englanninkielinen dokumentti suomeksi niin, että sävy pysyy ammattimaisena'
 
 <strong>Tai:</strong>
-'Tarkista tämä suomenkielinen teksti ja korjaa kielioppivirheet sekä paranna sujuvuutta: [liitä teksti]'
+'Tarkista tämä suomenkielinen teksti ja korjaa kielioppivirheet sekä paranna sujuvuutta'`
+                },
+                en: {
+                    title: "Language Translation and Text Improvement 🌍",
+                    preview: "Modern AIs handle multiple languages surprisingly well! Translate documents or check and improve text quality.",
+                    content: `<strong>Language Translation and Text Improvement 🌍</strong>
 
-<strong>Pro-vinkki:</strong> Suomi on pieni kieli, mutta modernit AI:t osaavat sitä yllättävän hyvin!
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Language Translation and Finnish Language Improvement 🇫🇮</strong>
-
-On Independence Day we also celebrate Finnish - and AI knows it surprisingly well!
+Modern AIs handle multiple languages surprisingly well!
 
 <strong>Example:</strong>
-'Translate this English document to Finnish maintaining a professional tone: [paste text]'
+'Translate this document maintaining a professional tone'
 
 <strong>Or:</strong>
-'Check this Finnish text and correct grammar errors and improve fluency: [paste text]'
-
-<strong>Pro tip:</strong> Finnish is a small language, but modern AIs handle it surprisingly well!`
+'Check this text and correct grammar errors and improve fluency'`
+                }
             },
             8: {
-                title: "Vastaus vaikeaan sähköpostiin 😰→😊",
-                preview: "Joskus sähköpostin vastaanottaminen tuntuu vaikealta. AI auttaa löytämään oikeat sanat empaattiseen vastaukseen.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Vastaus vaikeaan sähköpostiin 😰→😊</strong>
+                fi: {
+                    title: "Vastaus vaikeaan sähköpostiin 😰→😊",
+                    preview: "Joskus sähköpostin vastaanottaminen tuntuu vaikealta. AI auttaa löytämään oikeat sanat empaattiseen vastaukseen.",
+                    content: `<strong>Vastaus vaikeaan sähköpostiin 😰→😊</strong>
 
 Joskus sähköpostin vastaanottaminen tuntuu vaikealta. AI auttaa löytämään oikeat sanat!
 
 <strong>Esimerkki:</strong>
 'Sain sähköpostin jossa asiakas on tyytymätön viivästyneeseen toimitukseen. Auta minua kirjoittamaan empaattinen vastaus jossa: 1) Osoitan ymmärrystä, 2) Selitän tilanteen, 3) Tarjoan ratkaisun.'
 
-<strong>Pro-vinkki:</strong> Älä lähetä AI:n vastausta sellaisenaan - käytä sitä pohjana ja lisää oma äänesi.
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Responding to Difficult Emails 😰→😊</strong>
+<strong>Pro-vinkki:</strong> Älä lähetä AI:n vastausta sellaisenaan - käytä sitä pohjana ja lisää oma äänesi.`
+                },
+                en: {
+                    title: "Responding to Difficult Emails 😰→😊",
+                    preview: "Sometimes responding to an email feels hard. AI helps find the right words for an empathetic response.",
+                    content: `<strong>Responding to Difficult Emails 😰→😊</strong>
 
 Sometimes responding to an email feels hard. AI helps find the right words!
 
@@ -643,247 +684,231 @@ Sometimes responding to an email feels hard. AI helps find the right words!
 'I received an email where a customer is unhappy about a delayed delivery. Help me write an empathetic response that: 1) Shows understanding, 2) Explains the situation, 3) Offers a solution.'
 
 <strong>Pro tip:</strong> Don't send AI's response as-is - use it as a foundation and add your own voice.`
+                }
             },
             9: {
-                title: "Pitkän dokumentin yhteenveto 📄",
-                preview: "Sadan sivun raportti odottaa lukemista? AI lukee puolestasi ja kertoo päätarkoituksen, johtopäätökset ja suositellut toimenpiteet.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Pitkän dokumentin yhteenveto 📄</strong>
+                fi: {
+                    title: "Pitkän dokumentin yhteenveto 📄",
+                    preview: "Sadan sivun raportti odottaa lukemista? AI lukee puolestasi ja kertoo päätarkoituksen, johtopäätökset ja suositellut toimenpiteet.",
+                    content: `<strong>Pitkän dokumentin yhteenveto 📄</strong>
 
 Sadan sivun raportti odottaa lukemista? AI lukee puolestasi!
 
 <strong>Esimerkki:</strong>
 'Lue tämä asiakirja ja kerro: 1) Mikä on päätarkoitus, 2) Mitkä ovat tärkeimmät johtopäätökset, 3) Mitä toimenpiteitä suositellaan'
 
-<strong>Missä kokeilla:</strong> Claude on paras pitkien dokumenttien kanssa. ChatGPT Plus osaa lukea PDF:iä.
-
-<strong>Pro-vinkki:</strong> Voit kysyä tarkentavia kysymyksiä dokumentista: 'Mitä raportissa sanotaan budjetista?'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Long Document Summary 📄</strong>
+<strong>Pro-vinkki:</strong> Voit kysyä tarkentavia kysymyksiä dokumentista.`
+                },
+                en: {
+                    title: "Long Document Summary 📄",
+                    preview: "100-page report waiting to be read? AI reads it for you and tells you the main purpose, conclusions, and recommended actions.",
+                    content: `<strong>Long Document Summary 📄</strong>
 
 100-page report waiting to be read? AI reads it for you!
 
 <strong>Example:</strong>
 'Read this document and tell me: 1) What is the main purpose, 2) What are the key conclusions, 3) What actions are recommended'
 
-<strong>Where to try:</strong> Claude is best for long documents. ChatGPT Plus can read PDFs.
-
-<strong>Pro tip:</strong> You can ask follow-up questions about the document: 'What does the report say about the budget?'`
+<strong>Pro tip:</strong> You can ask follow-up questions about the document.`
+                }
             },
             10: {
-                title: "Ideointi ja aivoriihi 💡",
-                preview: "Jumissa ideoiden kanssa? AI on loistava sparrauskumppani! Pyydä ideoita aktiviteetteihin, projekteihin tai tapahtumiin.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Ideointi ja aivoriihi 💡</strong>
+                fi: {
+                    title: "Ideointi ja aivoriihi 💡",
+                    preview: "Jumissa ideoiden kanssa? AI on loistava sparrauskumppani! Pyydä ideoita aktiviteetteihin, projekteihin tai tapahtumiin.",
+                    content: `<strong>Ideointi ja aivoriihi 💡</strong>
 
 Jumissa ideoiden kanssa? AI on loistava sparrauskumppani!
 
 <strong>Esimerkki:</strong>
-'Organisoin työpaikan pikkujoulut 30 hengelle. Tarvitsen ideoita aktiviteetteihin jotka ovat hauskoja, edistävät tiimityötä ja sopivat eri-ikäisille. Budjetti 800€.'
-
-<strong>Pro-vinkki:</strong> Pyydä AI:ta ajattelemaan eri ammattien näkökulmista: 'Anna pikkujouluideoita IT-asiantuntijoille' tai 'Mitä sairaanhoitajat arvostaisivat?'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Ideation and Brainstorming 💡</strong>
+'Organisoin työpaikan pikkujoulut 30 hengelle. Tarvitsen ideoita aktiviteetteihin jotka ovat hauskoja, edistävät tiimityötä ja sopivat eri-ikäisille. Budjetti 800€.'`
+                },
+                en: {
+                    title: "Ideation and Brainstorming 💡",
+                    preview: "Stuck with ideas? AI is a great sparring partner! Ask for ideas for activities, projects, or events.",
+                    content: `<strong>Ideation and Brainstorming 💡</strong>
 
 Stuck with ideas? AI is a great sparring partner!
 
 <strong>Example:</strong>
-'I'm organizing office holiday party for 30 people. I need ideas for activities that are fun, promote teamwork and suit different ages. Budget €800.'
-
-<strong>Pro tip:</strong> Ask AI to think from different professions' perspectives: 'Give holiday party ideas for IT professionals' or 'What would nurses appreciate?'`
+'I'm organizing office holiday party for 30 people. I need ideas for activities that are fun, promote teamwork and suit different ages. Budget €800.'`
+                }
             },
             11: {
-                title: "Ongelman pilkkominen osiin 🧩",
-                preview: "Iso ongelma tuntuu ylivoimaiselta? AI auttaa jakamaan sen hallittaviksi paloiksi ja priorisoimaan mitä pitäisi ratkaista ensin.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Ongelman pilkkominen osiin 🧩</strong>
+                fi: {
+                    title: "Ongelman pilkkominen osiin 🧩",
+                    preview: "Iso ongelma tuntuu ylivoimaiselta? AI auttaa jakamaan sen hallittaviksi paloiksi ja priorisoimaan mitä pitäisi ratkaista ensin.",
+                    content: `<strong>Ongelman pilkkominen osiin 🧩</strong>
 
 Iso ongelma tuntuu ylivoimaiselta? AI auttaa jakamaan sen hallittaviksi paloiksi!
 
 <strong>Esimerkki:</strong>
-'Meillä on ongelma: asiakaspalautteen käsittely vie liikaa aikaa ja palautteet hukkuvat. Jaa tämä ongelma pienempiin osiin ja ehdota mitä pitäisi tutkia ensin.'
-
-<strong>Pro-vinkki:</strong> Pyydä AI:ta priorisoimaan osat: 'Mitkä näistä osa-ongelmista kannattaa ratkaista ensin?'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Breaking Down Problems 🧩</strong>
+'Meillä on ongelma: asiakaspalautteen käsittely vie liikaa aikaa ja palautteet hukkuvat. Jaa tämä ongelma pienempiin osiin ja ehdota mitä pitäisi tutkia ensin.'`
+                },
+                en: {
+                    title: "Breaking Down Problems 🧩",
+                    preview: "Big problem feels overwhelming? AI helps break it into manageable pieces and prioritize what to solve first.",
+                    content: `<strong>Breaking Down Problems 🧩</strong>
 
 Big problem feels overwhelming? AI helps break it into manageable pieces!
 
 <strong>Example:</strong>
-'We have a problem: customer feedback processing takes too much time and feedback gets lost. Break this problem into smaller parts and suggest what should be investigated first.'
-
-<strong>Pro tip:</strong> Ask AI to prioritize parts: 'Which of these sub-problems should be solved first?'`
+'We have a problem: customer feedback processing takes too much time and feedback gets lost. Break this problem into smaller parts and suggest what should be investigated first.'`
+                }
             },
             12: {
-                title: "Päätöksenteon tuki (pros & cons) ⚖️",
-                preview: "Vaikea päätös edessä? AI auttaa punnitsemaan vaihtoehtoja listaamalla plussat ja miinukset sekä ehdottamalla lisäkysymyksiä.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Päätöksenteon tuki (pros & cons) ⚖️</strong>
+                fi: {
+                    title: "Päätöksenteon tuki (pros & cons) ⚖️",
+                    preview: "Vaikea päätös edessä? AI auttaa punnitsemaan vaihtoehtoja listaamalla plussat ja miinukset sekä ehdottamalla lisäkysymyksiä.",
+                    content: `<strong>Päätöksenteon tuki (pros & cons) ⚖️</strong>
 
 Vaikea päätös edessä? AI auttaa punnitsemaan vaihtoehtoja!
 
 <strong>Esimerkki:</strong>
-'Harkitsen kahta vaihtoehtoa uuden projektinhallintatyökalun valinnassa: Vaihtoehto A maksaa vähemmän mutta vaatii enemmän koulutusta. Vaihtoehto B on kalliimpi mutta helppokäyttöisempi. Listaa molempien plussat ja miinukset.'
-
-<strong>Pro-vinkki:</strong> Kysy: 'Mitä kysymyksiä minun pitäisi vielä selvittää ennen päätöstä?'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Decision Support (pros & cons) ⚖️</strong>
+'Harkitsen kahta vaihtoehtoa uuden projektinhallintatyökalun valinnassa: Vaihtoehto A maksaa vähemmän mutta vaatii enemmän koulutusta. Vaihtoehto B on kalliimpi mutta helppokäyttöisempi. Listaa molempien plussat ja miinukset.'`
+                },
+                en: {
+                    title: "Decision Support (pros & cons) ⚖️",
+                    preview: "Tough decision ahead? AI helps weigh options by listing pros and cons and suggesting additional questions.",
+                    content: `<strong>Decision Support (pros & cons) ⚖️</strong>
 
 Tough decision ahead? AI helps weigh options!
 
 <strong>Example:</strong>
-'I'm considering two options for a new project management tool: Option A costs less but requires more training. Option B is more expensive but easier to use. List the pros and cons of both.'
-
-<strong>Pro tip:</strong> Ask: 'What questions should I still clarify before making a decision?'`
+'I'm considering two options for a new project management tool: Option A costs less but requires more training. Option B is more expensive but easier to use. List the pros and cons of both.'`
+                }
             },
             13: {
-                title: "Datan tulkinta ja ymmärtäminen 📊",
-                preview: "Numeroita ja taulukoita edessä? AI auttaa ymmärtämään mitä ne kertovat, näkemään trendejä ja ehdottamaan visualisointeja.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Datan tulkinta ja ymmärtäminen 📊</strong>
+                fi: {
+                    title: "Datan tulkinta ja ymmärtäminen 📊",
+                    preview: "Numeroita ja taulukoita edessä? AI auttaa ymmärtämään mitä ne kertovat, näkemään trendejä ja ehdottamaan visualisointeja.",
+                    content: `<strong>Datan tulkinta ja ymmärtäminen 📊</strong>
 
 Numeroita ja taulukoita edessä? AI auttaa ymmärtämään mitä ne kertovat!
 
 <strong>Esimerkki:</strong>
-'Tässä on vuoden myyntiluvut kuukausittain: [liitä data]. Kerro mitä trendejä näet, mitkä kuukaudet olivat parhaita/huonoimpia ja mitä tämä voisi kertoa.'
-
-<strong>Missä kokeilla:</strong> ChatGPT Plus ja Claude voivat analysoida Excel-taulukoita. Copilot Excelissä osaa analysoida suoraan.
-
-<strong>Pro-vinkki:</strong> Pyydä AI:ta visualisoimaan tulokset: 'Ehdota minkälainen kaavio olisi paras tälle datalle.'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Data Interpretation and Understanding 📊</strong>
+'Tässä on vuoden myyntiluvut kuukausittain. Kerro mitä trendejä näet, mitkä kuukaudet olivat parhaita/huonoimpia ja mitä tämä voisi kertoa.'`
+                },
+                en: {
+                    title: "Data Interpretation and Understanding 📊",
+                    preview: "Numbers and tables ahead? AI helps understand what they tell, see trends, and suggest visualizations.",
+                    content: `<strong>Data Interpretation and Understanding 📊</strong>
 
 Numbers and tables ahead? AI helps understand what they tell!
 
 <strong>Example:</strong>
-'Here are annual sales figures by month: [paste data]. Tell me what trends you see, which months were best/worst and what this might indicate.'
-
-<strong>Where to try:</strong> ChatGPT Plus and Claude can analyze Excel tables. Copilot in Excel analyzes directly.
-
-<strong>Pro tip:</strong> Ask AI to visualize results: 'Suggest what kind of chart would be best for this data.'`
+'Here are annual sales figures by month. Tell me what trends you see, which months were best/worst and what this might indicate.'`
+                }
             },
             14: {
-                title: "Eri näkökulmien hahmottaminen 👁️",
-                preview: "Yksi näkökulma on vain yksi totuus - AI auttaa näkemään laajemmin! Analysoi suunnitelmia eri sidosryhmien näkökulmista.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Eri näkökulmien hahmottaminen 👁️</strong>
+                fi: {
+                    title: "Eri näkökulmien hahmottaminen 👁️",
+                    preview: "Yksi näkökulma on vain yksi totuus - AI auttaa näkemään laajemmin! Analysoi suunnitelmia eri sidosryhmien näkökulmista.",
+                    content: `<strong>Eri näkökulmien hahmottaminen 👁️</strong>
 
 Yksi näkökulma on vain yksi totuus - AI auttaa näkemään laajemmin!
 
 <strong>Esimerkki:</strong>
-'Suunnittelemme uutta asiakaspalvelun chatbottia. Analysoi tämä ehdotus neljästä näkökulmasta: loppuasiakkaat, asiakaspalvelutiimi, IT-osasto ja johto.'
-
-<strong>Pro-vinkki:</strong> Pyydä AI:ta haastamaan oletuksia: 'Mikä voisi mennä pieleen tässä suunnitelmassa?'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Understanding Different Perspectives 👁️</strong>
+'Suunnittelemme uutta asiakaspalvelun chatbottia. Analysoi tämä ehdotus neljästä näkökulmasta: loppuasiakkaat, asiakaspalvelutiimi, IT-osasto ja johto.'`
+                },
+                en: {
+                    title: "Understanding Different Perspectives 👁️",
+                    preview: "One perspective is just one truth - AI helps see broader! Analyze plans from different stakeholder perspectives.",
+                    content: `<strong>Understanding Different Perspectives 👁️</strong>
 
 One perspective is just one truth - AI helps see broader!
 
 <strong>Example:</strong>
-'We're planning a new customer service chatbot. Analyze this proposal from four perspectives: end customers, customer service team, IT department, and management.'
-
-<strong>Pro tip:</strong> Ask AI to challenge assumptions: 'What could go wrong with this plan?'`
+'We're planning a new customer service chatbot. Analyze this proposal from four perspectives: end customers, customer service team, IT department, and management.'`
+                }
             },
             15: {
-                title: "Uuden aiheen oppiminen nopeasti 🚀",
-                preview: "Uusi aihe hallittavaksi nopeasti? AI on henkilökohtainen oppimisassistenttisi! Opi tärkeimmät konseptit käytännönläheisesti.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Uuden aiheen oppiminen nopeasti 🚀</strong>
+                fi: {
+                    title: "Uuden aiheen oppiminen nopeasti 🚀",
+                    preview: "Uusi aihe hallittavaksi nopeasti? AI on henkilökohtainen oppimisassistenttisi! Opi tärkeimmät konseptit käytännönläheisesti.",
+                    content: `<strong>Uuden aiheen oppiminen nopeasti 🚀</strong>
 
 Uusi aihe hallittavaksi nopeasti? AI on henkilökohtainen oppimisassistenttisi!
 
 <strong>Esimerkki:</strong>
-'Haluan oppia projektinhallinnan perusteet. Olen täysi aloittelija. Opeta minulle tärkeimmät konseptit ja työkalut niin että ymmärrän ne käytännössä.'
-
-<strong>Pro-vinkki:</strong> Pyydä AI:ta räätälöimään oppiminen taustallesi: 'Selitä tämä IT-taustan omaavalle henkilölle.'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Learning New Topics Quickly 🚀</strong>
+'Haluan oppia projektinhallinnan perusteet. Olen täysi aloittelija. Opeta minulle tärkeimmät konseptit ja työkalut niin että ymmärrän ne käytännössä.'`
+                },
+                en: {
+                    title: "Learning New Topics Quickly 🚀",
+                    preview: "New topic to master quickly? AI is your personal learning assistant! Learn key concepts in a practical way.",
+                    content: `<strong>Learning New Topics Quickly 🚀</strong>
 
 New topic to master quickly? AI is your personal learning assistant!
 
 <strong>Example:</strong>
-'I want to learn project management basics. I'm a complete beginner. Teach me the most important concepts and tools so I understand them practically.'
-
-<strong>Pro tip:</strong> Ask AI to tailor learning to your background: 'Explain this to someone with an IT background.'`
+'I want to learn project management basics. I'm a complete beginner. Teach me the most important concepts and tools so I understand them practically.'`
+                }
             },
             16: {
-                title: "Käsitteiden selittäminen (ELI5) 🧒",
-                preview: "'Explain Like I'm 5' - monimutkainen yksinkertaiseksi! Pyydä selityksiä arkielämän esimerkkien avulla.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Käsitteiden selittäminen (ELI5) 🧒</strong>
+                fi: {
+                    title: "Käsitteiden selittäminen (ELI5) 🧒",
+                    preview: "'Explain Like I'm 5' - monimutkainen yksinkertaiseksi! Pyydä selityksiä arkielämän esimerkkien avulla.",
+                    content: `<strong>Käsitteiden selittäminen (ELI5) 🧒</strong>
 
 'Explain Like I'm 5' - monimutkainen yksinkertaiseksi!
 
 <strong>Esimerkki:</strong>
-'Selitä mitä on lohkoketjuteknologia (blockchain) niin että täysin ei-tekninen henkilö ymmärtää.'
-
-<strong>Pro-vinkki:</strong> Pyydä analogioita: 'Selitä tämä käyttäen arkielämän esimerkkejä.'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Explaining Concepts (ELI5) 🧒</strong>
+'Selitä mitä on lohkoketjuteknologia (blockchain) niin että täysin ei-tekninen henkilö ymmärtää.'`
+                },
+                en: {
+                    title: "Explaining Concepts (ELI5) 🧒",
+                    preview: "'Explain Like I'm 5' - complex made simple! Ask for explanations using everyday examples.",
+                    content: `<strong>Explaining Concepts (ELI5) 🧒</strong>
 
 'Explain Like I'm 5' - complex made simple!
 
 <strong>Example:</strong>
-'Explain what blockchain technology is so that a completely non-technical person understands.'
-
-<strong>Pro tip:</strong> Ask for analogies: 'Explain this using everyday examples.'`
+'Explain what blockchain technology is so that a completely non-technical person understands.'`
+                }
             },
             17: {
-                title: "Taustatutkimus ja faktojen tarkistus 🔍",
-                preview: "AI tietää paljon - mutta varo, se voi myös erehtyä! Hanki yleiskatsaus aiheeseen, mutta tarkista kriittiset tiedot aina.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Taustatutkimus ja faktojen tarkistus 🔍</strong>
+                fi: {
+                    title: "Taustatutkimus ja faktojen tarkistus 🔍",
+                    preview: "AI tietää paljon - mutta varo, se voi myös erehtyä! Hanki yleiskatsaus aiheeseen, mutta tarkista kriittiset tiedot aina.",
+                    content: `<strong>Taustatutkimus ja faktojen tarkistus 🔍</strong>
 
 AI tietää paljon - mutta varo, se voi myös erehtyä!
 
 <strong>Esimerkki:</strong>
 'Anna yleiskatsaus EU:n tekoälyasetukseen (AI Act): mitkä ovat keskeiset vaatimukset, aikataulu ja keneen se vaikuttaa?'
 
-<strong>Pro-vinkki:</strong> TÄRKEÄÄ: Älä luota sokeasti! Tarkista aina kriittiset tiedot alkuperäisistä lähteistä!
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Background Research and Fact-Checking 🔍</strong>
+<strong>TÄRKEÄÄ:</strong> Älä luota sokeasti! Tarkista aina kriittiset tiedot alkuperäisistä lähteistä!`
+                },
+                en: {
+                    title: "Background Research and Fact-Checking 🔍",
+                    preview: "AI knows a lot - but beware, it can also be wrong! Get an overview of topics, but always verify critical information.",
+                    content: `<strong>Background Research and Fact-Checking 🔍</strong>
 
 AI knows a lot - but beware, it can also be wrong!
 
 <strong>Example:</strong>
 'Give an overview of the EU AI Act: what are the key requirements, timeline, and who does it affect?'
 
-<strong>Pro tip:</strong> IMPORTANT: Don't trust blindly! Always verify critical information from original sources!`
+<strong>IMPORTANT:</strong> Don't trust blindly! Always verify critical information from original sources!`
+                }
             },
             18: {
-                title: "Kielten kääntäminen - syvemmin 🌍",
-                preview: "Kääntäminen ei ole vain sanasta sanaan - kulttuurikin on mukana! Mukauta käännökset kohdeyleisölle sopiviksi.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Kielten kääntäminen - syvemmin 🌍</strong>
+                fi: {
+                    title: "Kielten kääntäminen - syvemmin 🌍",
+                    preview: "Kääntäminen ei ole vain sanasta sanaan - kulttuurikin on mukana! Mukauta käännökset kohdeyleisölle sopiviksi.",
+                    content: `<strong>Kielten kääntäminen - syvemmin 🌍</strong>
 
 Kääntäminen ei ole vain sanasta sanaan - kulttuurikin on mukana!
 
 <strong>Esimerkki:</strong>
 'Käännä tämä markkinointiviesti englanniksi, mutta mukauta se brittiyleisölle sopivaksi.'
 
-<strong>Pro-vinkki:</strong> Pyydä useita vaihtoehtoja: 'Anna kolme erilaista tapaa kääntää tämä lause.'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Language Translation - Deeper 🌍</strong>
+<strong>Pro-vinkki:</strong> Pyydä useita vaihtoehtoja: 'Anna kolme erilaista tapaa kääntää tämä lause.'`
+                },
+                en: {
+                    title: "Language Translation - Deeper 🌍",
+                    preview: "Translation isn't just word-for-word - culture matters too! Adapt translations to suit the target audience.",
+                    content: `<strong>Language Translation - Deeper 🌍</strong>
 
 Translation isn't just word-for-word - culture matters too!
 
@@ -891,119 +916,113 @@ Translation isn't just word-for-word - culture matters too!
 'Translate this marketing message to English, but adapt it for a British audience.'
 
 <strong>Pro tip:</strong> Ask for multiple options: 'Give three different ways to translate this sentence.'`
+                }
             },
             19: {
-                title: "Henkilökohtainen oppimissuunnitelma 📚",
-                preview: "Haluatko kehittyä jossain? AI auttaa laatimaan realistisen suunnitelman mitattavine välitavoitteineen!",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Henkilökohtainen oppimissuunnitelma 📚</strong>
+                fi: {
+                    title: "Henkilökohtainen oppimissuunnitelma 📚",
+                    preview: "Haluatko kehittyä jossain? AI auttaa laatimaan realistisen suunnitelman mitattavine välitavoitteineen!",
+                    content: `<strong>Henkilökohtainen oppimissuunnitelma 📚</strong>
 
 Haluatko kehittyä jossain? AI auttaa laatimaan realistisen suunnitelman!
 
 <strong>Esimerkki:</strong>
-'Haluan oppia data-analyysin perusteet seuraavan 3 kuukauden aikana. Minulla on 2-3 tuntia viikossa aikaa. Luo vaiheittainen oppimissuunnitelma.'
-
-<strong>Pro-vinkki:</strong> Pyydä mitattavia välitavoitteita: 'Miten tiedän että olen valmis siirtymään seuraavaan vaiheeseen?'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Personal Learning Plan 📚</strong>
+'Haluan oppia data-analyysin perusteet seuraavan 3 kuukauden aikana. Minulla on 2-3 tuntia viikossa aikaa. Luo vaiheittainen oppimissuunnitelma.'`
+                },
+                en: {
+                    title: "Personal Learning Plan 📚",
+                    preview: "Want to develop a skill? AI helps create a realistic plan with measurable milestones!",
+                    content: `<strong>Personal Learning Plan 📚</strong>
 
 Want to develop a skill? AI helps create a realistic plan!
 
 <strong>Example:</strong>
-'I want to learn data analysis basics over the next 3 months. I have 2-3 hours per week. Create a step-by-step learning plan.'
-
-<strong>Pro tip:</strong> Ask for measurable milestones: 'How do I know when I'm ready to move to the next step?'`
+'I want to learn data analysis basics over the next 3 months. I have 2-3 hours per week. Create a step-by-step learning plan.'`
+                }
             },
             20: {
-                title: "Taulukoiden ja listojen luominen 📋",
-                preview: "Tiedot sekaisin? AI järjestää ne siistiksi taulukoksi tai listaksi! Voit myös pyytää laskentakaavoja mukaan.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Taulukoiden ja listojen luominen 📋</strong>
+                fi: {
+                    title: "Taulukoiden ja listojen luominen 📋",
+                    preview: "Tiedot sekaisin? AI järjestää ne siistiksi taulukoksi tai listaksi! Voit myös pyytää laskentakaavoja mukaan.",
+                    content: `<strong>Taulukoiden ja listojen luominen 📋</strong>
 
 Tiedot sekaisin? AI järjestää ne siistiksi taulukoksi tai listaksi!
 
 <strong>Esimerkki:</strong>
-'Tee tästä tiedosta selkeä taulukko: Projekti A alkaa tammikuussa, budjetti 50k, vastuussa Matti. Projekti B alkaa helmikuussa, budjetti 30k, vastuussa Liisa.'
-
-<strong>Pro-vinkki:</strong> Pyydä myös laskentakaavoja: 'Lisää sarake joka laskee jäljellä olevan budjetin.'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Creating Tables and Lists 📋</strong>
+'Tee tästä tiedosta selkeä taulukko: Projekti A alkaa tammikuussa, budjetti 50k, vastuussa Matti. Projekti B alkaa helmikuussa, budjetti 30k, vastuussa Liisa.'`
+                },
+                en: {
+                    title: "Creating Tables and Lists 📋",
+                    preview: "Information messy? AI organizes it into neat tables or lists! You can also ask for formulas.",
+                    content: `<strong>Creating Tables and Lists 📋</strong>
 
 Information messy? AI organizes it into neat tables or lists!
 
 <strong>Example:</strong>
-'Create a clear table from this data: Project A starts in January, budget 50k, owner Matti. Project B starts in February, budget 30k, owner Liisa.'
-
-<strong>Pro tip:</strong> Also ask for formulas: 'Add a column that calculates remaining budget.'`
+'Create a clear table from this data: Project A starts in January, budget 50k, owner Matti. Project B starts in February, budget 30k, owner Liisa.'`
+                }
             },
             21: {
-                title: "Aikataulutus ja priorisointi ⏰",
-                preview: "Liikaa tekemistä, liian vähän aikaa? AI auttaa järjestämään tehtävät kiireellisyyden ja tärkeyden mukaan.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Aikataulutus ja priorisointi ⏰</strong>
+                fi: {
+                    title: "Aikataulutus ja priorisointi ⏰",
+                    preview: "Liikaa tekemistä, liian vähän aikaa? AI auttaa järjestämään tehtävät kiireellisyyden ja tärkeyden mukaan.",
+                    content: `<strong>Aikataulutus ja priorisointi ⏰</strong>
 
 Liikaa tekemistä, liian vähän aikaa? AI auttaa järjestämään!
 
 <strong>Esimerkki:</strong>
-'Minulla on nämä tehtävät seuraavalle viikolle: [listaa]. Auta priorisoimaan ne kiireellisyyden ja tärkeyden mukaan. Käytä Eisenhower-matriisia.'
-
-<strong>Pro-vinkki:</strong> Pyydä aikaa-arvioita: 'Arvioi kuinka kauan kukin tehtävä vie.'
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Scheduling and Prioritization ⏰</strong>
+'Minulla on nämä tehtävät seuraavalle viikolle. Auta priorisoimaan ne kiireellisyyden ja tärkeyden mukaan. Käytä Eisenhower-matriisia.'`
+                },
+                en: {
+                    title: "Scheduling and Prioritization ⏰",
+                    preview: "Too much to do, too little time? AI helps organize tasks by urgency and importance.",
+                    content: `<strong>Scheduling and Prioritization ⏰</strong>
 
 Too much to do, too little time? AI helps organize!
 
 <strong>Example:</strong>
-'I have these tasks for next week: [list]. Help prioritize them by urgency and importance. Use Eisenhower matrix.'
-
-<strong>Pro tip:</strong> Ask for time estimates: 'Estimate how long each task will take.'`
+'I have these tasks for next week. Help prioritize them by urgency and importance. Use Eisenhower matrix.'`
+                }
             },
             22: {
-                title: "Mallipohjien luominen 📝",
-                preview: "Toistuvat dokumentit vievät aikaa? Luo mallipohja kerran, käytä uudestaan! Rakenna kokoelma yleisimpiin tilanteisiisi.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Mallipohjien luominen 📝</strong>
+                fi: {
+                    title: "Mallipohjien luominen 📝",
+                    preview: "Toistuvat dokumentit vievät aikaa? Luo mallipohja kerran, käytä uudestaan! Rakenna kokoelma yleisimpiin tilanteisiisi.",
+                    content: `<strong>Mallipohjien luominen 📝</strong>
 
 Toistuvat dokumentit vievät aikaa? Luo mallipohja kerran, käytä uudestaan!
 
 <strong>Esimerkki:</strong>
-'Luo mallipohja projektin aloituspalaveriin. Sisällytä: Osallistujien esittely, Projektin tavoitteet, Roolit ja vastuut, Aikataulu, Seuraavat askeleet.'
-
-<strong>Pro-vinkki:</strong> Luo kokoelma malleja yleisimpiin tilanteisiisi.
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Creating Templates 📝</strong>
+'Luo mallipohja projektin aloituspalaveriin. Sisällytä: Osallistujien esittely, Projektin tavoitteet, Roolit ja vastuut, Aikataulu, Seuraavat askeleet.'`
+                },
+                en: {
+                    title: "Creating Templates 📝",
+                    preview: "Repetitive documents take time? Create a template once, use repeatedly! Build a collection for your most common situations.",
+                    content: `<strong>Creating Templates 📝</strong>
 
 Repetitive documents take time? Create a template once, use repeatedly!
 
 <strong>Example:</strong>
-'Create a template for project kickoff meeting. Include: Participant introductions, Project objectives, Roles and responsibilities, Timeline, Next steps.'
-
-<strong>Pro tip:</strong> Build a collection of templates for your most common situations.`
+'Create a template for project kickoff meeting. Include: Participant introductions, Project objectives, Roles and responsibilities, Timeline, Next steps.'`
+                }
             },
             23: {
-                title: "Toistuvien tehtävien automatisointi 🤖",
-                preview: "Sama tehtävä yhä uudestaan? AI auttaa löytämään tapoja automatisoida! Aloita pienestä ja säästä aikaa.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Toistuvien tehtävien automatisointi 🤖</strong>
+                fi: {
+                    title: "Toistuvien tehtävien automatisointi 🤖",
+                    preview: "Sama tehtävä yhä uudestaan? AI auttaa löytämään tapoja automatisoida! Aloita pienestä ja säästä aikaa.",
+                    content: `<strong>Toistuvien tehtävien automatisointi 🤖</strong>
 
 Sama tehtävä yhä uudestaan? AI auttaa löytämään tapoja automatisoida!
 
 <strong>Esimerkki:</strong>
 'Joka viikko kokoan viikkoraportin jossa on: edistyneet tehtävät, tulevat deadlinet ja blokkaajaongelmat. Miten voisin automatisoida tätä?'
 
-<strong>Pro-vinkki:</strong> Aloita pienestä - jo 30 min viikkosäästö on 26 tuntia vuodessa!
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Automating Repetitive Tasks 🤖</strong>
+<strong>Pro-vinkki:</strong> Aloita pienestä - jo 30 min viikkosäästö on 26 tuntia vuodessa!`
+                },
+                en: {
+                    title: "Automating Repetitive Tasks 🤖",
+                    preview: "Same task over and over? AI helps find ways to automate! Start small and save time.",
+                    content: `<strong>Automating Repetitive Tasks 🤖</strong>
 
 Same task over and over? AI helps find ways to automate!
 
@@ -1011,12 +1030,13 @@ Same task over and over? AI helps find ways to automate!
 'Every week I compile a status report with: completed tasks, upcoming deadlines, and blocking issues. How could I automate this?'
 
 <strong>Pro tip:</strong> Start small - even 30 min weekly savings is 26 hours per year!`
+                }
             },
             24: {
-                title: "Yhteenveto - Parhaat käytännöt ja seuraavat askeleet 🎄",
-                preview: "Olet oppinut 23 tapaa käyttää tekoälyä työssä - mitä seuraavaksi? Tärkeimmät opit ja konkreettiset seuraavat askeleet.",
-                content: `<div class="language-label">🇫🇮 SUOMI</div>
-<strong>Yhteenveto - Parhaat käytännöt ja seuraavat askeleet 🎄</strong>
+                fi: {
+                    title: "Yhteenveto - Parhaat käytännöt 🎄",
+                    preview: "Olet oppinut 23 tapaa käyttää tekoälyä työssä - mitä seuraavaksi? Tärkeimmät opit ja konkreettiset seuraavat askeleet.",
+                    content: `<strong>Yhteenveto - Parhaat käytännöt 🎄</strong>
 
 Olet oppinut 23 tapaa käyttää tekoälyä työssä - mitä seuraavaksi?
 
@@ -1029,13 +1049,12 @@ Olet oppinut 23 tapaa käyttää tekoälyä työssä - mitä seuraavaksi?
 <strong>Seuraavat askeleet:</strong>
 1. Valitse 2-3 vinkkiä joita aiot käyttää ensi viikolla
 2. Varaa 15 min päivässä AI:n kokeiluun
-3. Liity AI-yhteisöihin
-
-Paras tapa oppia AI:n käyttöä on käyttää sitä!
-
-<div class="language-divider"></div>
-<div class="language-label">🇬🇧 ENGLISH</div>
-<strong>Summary - Best Practices and Next Steps 🎄</strong>
+3. Liity AI-yhteisöihin`
+                },
+                en: {
+                    title: "Summary - Best Practices 🎄",
+                    preview: "You've learned 23 ways to use AI at work - what's next? Key takeaways and concrete next steps.",
+                    content: `<strong>Summary - Best Practices 🎄</strong>
 
 You've learned 23 ways to use AI at work - what's next?
 
@@ -1048,14 +1067,52 @@ You've learned 23 ways to use AI at work - what's next?
 <strong>Next steps:</strong>
 1. Choose 2-3 tips you'll use next week
 2. Reserve 15 min daily for AI experimentation
-3. Join AI communities
-
-The best way to learn AI is to use it!`
+3. Join AI communities`
+                }
             }
         };
         
-        let currentFilter = 'all';
-        let searchTerm = '';
+        function updateLanguage() {
+            document.getElementById('mainTitle').textContent = translations[currentLang].mainTitle;
+            document.getElementById('subtitle').textContent = translations[currentLang].subtitle;
+            document.getElementById('searchBox').placeholder = translations[currentLang].searchPlaceholder;
+            document.getElementById('noResultsText').textContent = translations[currentLang].noResultsText;
+            document.getElementById('noResultsHint').textContent = translations[currentLang].noResultsHint;
+            document.getElementById('footerReminder').textContent = translations[currentLang].footerReminder;
+            document.getElementById('footerCredit').textContent = translations[currentLang].footerCredit;
+            document.getElementById('closeBtn').textContent = translations[currentLang].closeBtn;
+            
+            renderFilterButtons();
+            renderTips();
+        }
+        
+        function renderFilterButtons() {
+            const container = document.getElementById('filterButtons');
+            container.innerHTML = '';
+            
+            const allBtn = document.createElement('button');
+            allBtn.className = 'filter-btn' + (currentFilter === 'all' ? ' active' : '');
+            allBtn.setAttribute('data-category', 'all');
+            allBtn.textContent = translations[currentLang].allTips;
+            container.appendChild(allBtn);
+            
+            Object.keys(categoryTips).forEach(catKey => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn' + (currentFilter === catKey ? ' active' : '');
+                btn.setAttribute('data-category', catKey);
+                btn.textContent = translations[currentLang].categories[catKey];
+                container.appendChild(btn);
+            });
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.getAttribute('data-category');
+                    renderTips();
+                });
+            });
+        }
         
         function renderTips() {
             const container = document.getElementById('tipsContainer');
@@ -1064,10 +1121,10 @@ The best way to learn AI is to use it!`
             let hasResults = false;
             
             if (currentFilter === 'all') {
-                Object.keys(categories).forEach(catKey => {
-                    const category = categories[catKey];
-                    const filteredTips = category.tips.filter(tipNum => {
-                        const tip = tipsData[tipNum];
+                Object.keys(categoryTips).forEach(catKey => {
+                    const tips = categoryTips[catKey];
+                    const filteredTips = tips.filter(tipNum => {
+                        const tip = tipsData[tipNum][currentLang];
                         if (!searchTerm) return true;
                         const searchLower = searchTerm.toLowerCase();
                         return tip.title.toLowerCase().includes(searchLower) ||
@@ -1079,7 +1136,7 @@ The best way to learn AI is to use it!`
                         const section = document.createElement('div');
                         section.className = 'category-section';
                         section.innerHTML = `
-                            <h2 class="category-title">${category.title}</h2>
+                            <h2 class="category-title">${translations[currentLang].categories[catKey]}</h2>
                             <div class="tips-grid" id="grid-${catKey}"></div>
                         `;
                         container.appendChild(section);
@@ -1091,9 +1148,9 @@ The best way to learn AI is to use it!`
                     }
                 });
             } else {
-                const category = categories[currentFilter];
-                const filteredTips = category.tips.filter(tipNum => {
-                    const tip = tipsData[tipNum];
+                const tips = categoryTips[currentFilter];
+                const filteredTips = tips.filter(tipNum => {
+                    const tip = tipsData[tipNum][currentLang];
                     if (!searchTerm) return true;
                     const searchLower = searchTerm.toLowerCase();
                     return tip.title.toLowerCase().includes(searchLower) ||
@@ -1105,7 +1162,7 @@ The best way to learn AI is to use it!`
                     const section = document.createElement('div');
                     section.className = 'category-section';
                     section.innerHTML = `
-                        <h2 class="category-title">${category.title}</h2>
+                        <h2 class="category-title">${translations[currentLang].categories[currentFilter]}</h2>
                         <div class="tips-grid" id="grid-${currentFilter}"></div>
                     `;
                     container.appendChild(section);
@@ -1121,7 +1178,7 @@ The best way to learn AI is to use it!`
         }
         
         function createTipCard(tipNum) {
-            const tip = tipsData[tipNum];
+            const tip = tipsData[tipNum][currentLang];
             const card = document.createElement('div');
             card.className = 'tip-card';
             card.innerHTML = `
@@ -1134,8 +1191,8 @@ The best way to learn AI is to use it!`
         }
         
         function openTip(tipNum) {
-            const tip = tipsData[tipNum];
-            document.getElementById('modalTitle').textContent = `Vinkki ${tipNum}: ${tip.title}`;
+            const tip = tipsData[tipNum][currentLang];
+            document.getElementById('modalTitle').textContent = `${translations[currentLang].tipPrefix} ${tipNum}: ${tip.title}`;
             document.getElementById('modalBody').innerHTML = tip.content;
             document.getElementById('modal').classList.add('active');
         }
@@ -1155,12 +1212,12 @@ The best way to learn AI is to use it!`
             renderTips();
         });
         
-        document.querySelectorAll('.filter-btn').forEach(btn => {
+        document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
-                currentFilter = this.getAttribute('data-category');
-                renderTips();
+                currentLang = this.getAttribute('data-lang');
+                updateLanguage();
             });
         });
         
